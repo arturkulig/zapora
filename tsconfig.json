@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "allowJs": false,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "strict": true,
+    "jsx": "preserve",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./",
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["./autoindex.mts", "./**/*.ts"],
+  "exclude": ["node_modules"]
+}
