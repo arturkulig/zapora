@@ -22,3 +22,7 @@ export const namespacesFull = {
   svg: SVG_NS,
   math: MATH_NS,
 };
+
+export type AnyPotentialElement = {
+  [ns in keyof NamespaceToElementRepository]: NamespaceToElementRepository[ns][keyof NamespaceToElementRepository[ns]];
+}[keyof NamespaceToElementRepository];

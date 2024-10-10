@@ -1,4 +1,4 @@
-import { State, Subscribable } from "@zapora/core";
+import { ReceivedReceit, State, Subscribable } from "@zapora/core";
 import {
   ElementNamespace,
   ElementTagNames,
@@ -11,26 +11,32 @@ export function applicator<
   TN extends ElementTagNames<NS>,
   VALUE,
 >(
-  getter: (element: NamespaceToElementRepository[NS][TN]) => VALUE,
-  setter: (element: NamespaceToElementRepository[NS][TN], value: VALUE) => void,
   source: VALUE | Subscribable<VALUE>,
+  initialize: (element: NamespaceToElementRepository[NS][TN]) => void,
+  destroy: (element: NamespaceToElementRepository[NS][TN]) => void,
+  applyState: (
+    element: NamespaceToElementRepository[NS][TN],
+    value: VALUE,
+  ) => void,
+  applyValue?: (
+    element: NamespaceToElementRepository[NS][TN],
+    value: VALUE,
+  ) => ReceivedReceit,
 ): Mod<NS, TN> {
   return isSubscribable<VALUE>(source)
     ? (element) => {
-        const initial = getter(element);
+        initialize(element);
         let destroyed = false;
 
         if (source instanceof State) {
-          setter(element, source.value);
+          applyState?.(element, source.value);
         }
 
         const sub = source.subscribe({
           get closed() {
             return destroyed;
           },
-          next: (value) => {
-            setter(element, value);
-          },
+          next: (value) => (applyValue ?? applyState)?.(element, value),
         });
 
         return () => {
@@ -41,14 +47,14 @@ export function applicator<
           if (!sub.closed) {
             sub.cancel();
           }
-          setter(element, initial);
+          destroy?.(element);
         };
       }
     : (element) => {
-        const initial = getter(element);
-        setter(element, source);
+        initialize(element);
+        applyState(element, source);
         return () => {
-          setter(element, initial);
+          destroy(element);
         };
       };
 }

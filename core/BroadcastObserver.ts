@@ -32,9 +32,11 @@ export class BroadcastObserver<T> implements CompleteObserver<T> {
     if (this.#listeners.size === 0) {
       return;
     }
-    const receits = Array.from(this.#listeners, (listener) =>
-      listener.observer.next?.(value),
-    );
+    const receits = Array.from(this.#listeners, (listener) => {
+      if (!listener.observer.closed) {
+        return listener.observer.next?.(value);
+      }
+    });
     return receits.some((receit) => receit !== undefined)
       ? Promise.allSettled(receits).then(noop)
       : undefined;
@@ -46,9 +48,11 @@ export class BroadcastObserver<T> implements CompleteObserver<T> {
     }
     const listeners = this.#listeners;
     this.#listeners = new Set();
-    const receits = Array.from(listeners, (listener) =>
-      listener.observer.complete?.(),
-    );
+    const receits = Array.from(listeners, (listener) => {
+      if (!listener.observer.closed) {
+        return listener.observer.complete?.();
+      }
+    });
     return receits.some((receit) => receit !== undefined)
       ? Promise.allSettled(receits).then(noop)
       : undefined;

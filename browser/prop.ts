@@ -17,9 +17,17 @@ export function prop<
     | NamespaceToElementRepository[NS][TN][Prop]
     | Subscribable<NamespaceToElementRepository[NS][TN][Prop]>,
 ): Mod<NS, TN> {
+  let initial: NamespaceToElementRepository[NS][TN][Prop];
   return applicator<NS, TN, NamespaceToElementRepository[NS][TN][Prop]>(
-    (element) => element[name],
-    (element, value) => (element[name] = value),
     source,
+    (element) => {
+      initial = element[name];
+    },
+    (element) => {
+      element[name] = initial;
+    },
+    (element, value) => {
+      element[name] = value;
+    },
   );
 }
