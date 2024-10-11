@@ -1,10 +1,5 @@
-import { Subscribable } from "@zapora/core";
-import { applicator } from "./internal/applicator";
-import {
-  ElementNamespace,
-  ElementTagNames,
-} from "./internal/ElementNamespaces";
-import { Mod } from "./internal/Mod";
+import { applicator } from "./applicator";
+import { StreamMaybe } from "./StreamMaybe";
 
 export interface AnimationMessage {
   style: CSSStyleDeclaration;
@@ -12,13 +7,11 @@ export interface AnimationMessage {
   timing: number;
 }
 
-export function animate<
-  NS extends ElementNamespace,
-  TN extends ElementTagNames<NS>,
->(source: AnimationMessage | Subscribable<AnimationMessage>): Mod<NS, TN> {
+export function animate(element: any, source: StreamMaybe<AnimationMessage>) {
   let lastFrame: Keyframe = {};
 
-  return applicator<NS, TN, AnimationMessage>(
+  return applicator<AnimationMessage>(
+    element,
     source,
     (element) => {
       if (

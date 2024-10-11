@@ -1,62 +1,45 @@
 import { ReceivedReceit, State, Subscribable } from "@zapora/core";
-import {
-  ElementNamespace,
-  ElementTagNames,
-  NamespaceToElementRepository,
-} from "./ElementNamespaces";
-import { Mod } from "./Mod";
 
-export function applicator<
-  NS extends ElementNamespace,
-  TN extends ElementTagNames<NS>,
-  VALUE,
->(
+export function applicator<VALUE>(
+  element: any,
   source: VALUE | Subscribable<VALUE>,
-  initialize: (element: NamespaceToElementRepository[NS][TN]) => void,
-  destroy: (element: NamespaceToElementRepository[NS][TN]) => void,
-  applyState: (
-    element: NamespaceToElementRepository[NS][TN],
-    value: VALUE,
-  ) => void,
-  applyValue?: (
-    element: NamespaceToElementRepository[NS][TN],
-    value: VALUE,
-  ) => ReceivedReceit,
-): Mod<NS, TN> {
-  return isSubscribable<VALUE>(source)
-    ? (element) => {
-        initialize(element);
-        let destroyed = false;
+  initialize: (element: any) => void,
+  destroy: (element: any) => void,
+  applyState: (element: any, value: VALUE) => void,
+  applyValue?: (element: any, value: VALUE) => ReceivedReceit,
+) {
+  if (isSubscribable<VALUE>(source)) {
+    initialize(element);
+    let destroyed = false;
 
-        if (source instanceof State) {
-          applyState?.(element, source.value);
-        }
+    if (source instanceof State) {
+      applyState?.(element, source.value);
+    }
 
-        const sub = source.subscribe({
-          get closed() {
-            return destroyed;
-          },
-          next: (value) => (applyValue ?? applyState)?.(element, value),
-        });
+    const sub = source.subscribe({
+      get closed() {
+        return destroyed;
+      },
+      next: (value) => (applyValue ?? applyState)?.(element, value),
+    });
 
-        return () => {
-          if (destroyed) {
-            return;
-          }
-          destroyed = true;
-          if (!sub.closed) {
-            sub.cancel();
-          }
-          destroy?.(element);
-        };
+    return () => {
+      if (destroyed) {
+        return;
       }
-    : (element) => {
-        initialize(element);
-        applyState(element, source);
-        return () => {
-          destroy(element);
-        };
-      };
+      destroyed = true;
+      if (!sub.closed) {
+        sub.cancel();
+      }
+      destroy?.(element);
+    };
+  }
+
+  initialize(element);
+  applyState(element, source);
+  return () => {
+    destroy(element);
+  };
 }
 
 function isSubscribable<T>(

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom, Subject } from "@zapora/core";
-import { prop } from "./prop";
 import { render } from "./render";
 
 describe("renders props", () => {
@@ -14,7 +13,7 @@ describe("renders props", () => {
       {
         namespace: "html",
         tag: "base",
-        mods: [prop("id", "testId")],
+        props: { id: "testId" },
       },
       root,
     );
@@ -33,7 +32,7 @@ describe("renders props", () => {
       {
         namespace: "html",
         tag: "base",
-        mods: [prop("id", ids)],
+        props: { id: ids },
       },
       root,
     );
@@ -57,7 +56,7 @@ describe("renders props", () => {
       {
         namespace: "html",
         tag: "base",
-        mods: [prop("id", ids)],
+        props: { id: ids },
       },
       root,
     );

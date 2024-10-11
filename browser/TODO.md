@@ -1,0 +1,7 @@
+- event handlers
+- children elements mod
+- children as a stream reconciliation
+- pushing context
+- receit given out by custom schedulers, add immediate application scheduler
+- add frame-by-frame scheduler (applying only before another draw-frame and rejecting duplicate instructions)
+- add scheduler.yield -ing scheduler

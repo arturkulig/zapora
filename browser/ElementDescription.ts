@@ -1,8 +1,11 @@
+import { AnimationMessage } from "./internal/animate";
 import {
   ElementNamespace,
   ElementTagNames,
+  NamespaceToElementRepository,
 } from "./internal/ElementNamespaces";
-import { Mod } from "./internal/Mod";
+import { ImmutableProperties } from "./internal/ImmutableProperties";
+import { StreamMaybe } from "./internal/StreamMaybe";
 
 export interface ElementDescription<
   NS extends ElementNamespace,
@@ -10,5 +13,19 @@ export interface ElementDescription<
 > {
   namespace: NS;
   tag: TN;
-  mods?: Mod<NS, TN>[];
+  props?: {
+    [id in Extract<
+      Exclude<keyof NamespaceToElementRepository[NS][TN], ImmutableProperties>,
+      string
+    >]?: StreamMaybe<NamespaceToElementRepository[NS][TN][id]>;
+  };
+  style?: {
+    [id in keyof CSSStyleDeclaration]?: StreamMaybe<CSSStyleDeclaration[id]>;
+  };
+  animate?: AnimationMessage | AnimationMessage[];
+  on?: {
+    [id in keyof HTMLElementEventMap]?: (
+      event: HTMLElementEventMap[id],
+    ) => void;
+  };
 }

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom, Subject } from "@zapora/core";
 import { render } from "./render";
-import { style } from "./style";
 
 describe("renders styles", () => {
   let root: HTMLDivElement;
@@ -14,7 +13,7 @@ describe("renders styles", () => {
       {
         namespace: "html",
         tag: "base",
-        mods: [style("display", "block")],
+        style: { display: "block" },
       },
       root,
     );
@@ -33,7 +32,7 @@ describe("renders styles", () => {
       {
         namespace: "html",
         tag: "base",
-        mods: [style("display", style$)],
+        style: { display: style$ },
       },
       root,
     );
@@ -57,7 +56,7 @@ describe("renders styles", () => {
       {
         namespace: "html",
         tag: "base",
-        mods: [style("display", style$)],
+        style: { display: style$ },
       },
       root,
     );

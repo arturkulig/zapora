@@ -1,26 +1,53 @@
 import { ElementDescription } from "../ElementDescription";
+import { animate, AnimationMessage } from "./animate";
 import {
   AnyPotentialElement,
   ElementNamespace,
   ElementTagNames,
   namespacesFull,
-  NamespaceToElementRepository,
 } from "./ElementNamespaces";
-import { Unmod } from "./Mod";
+import { prop } from "./prop";
+import { style } from "./style";
 
-export class Material<
-  NS extends ElementNamespace,
-  TN extends ElementTagNames<NS>,
-> {
-  element: NamespaceToElementRepository[NS][TN];
-  uninstallers: Unmod[];
+const nullArr: never[] = [];
 
-  constructor(description: ElementDescription<NS, TN>) {
+export class Material {
+  element: AnyPotentialElement;
+  uninstallers: (() => void)[];
+
+  constructor(
+    description: ElementDescription<
+      ElementNamespace,
+      ElementTagNames<ElementNamespace>
+    >,
+  ) {
     this.element = document.createElementNS(
       namespacesFull[description.namespace],
       description.tag,
-    ) as NamespaceToElementRepository[NS][TN];
-    this.uninstallers = description.mods?.map((mod) => mod(this.element)) ?? [];
+    ) as AnyPotentialElement;
+    this.uninstallers = [
+      ...(description.props
+        ? Object.entries(description.props).map(
+            ([propertyName, streamOrValue]) =>
+              streamOrValue != null
+                ? prop(this.element, propertyName, streamOrValue)
+                : undefined,
+          )
+        : nullArr),
+      ...(description.style
+        ? Object.entries(description.style).map(
+            ([propertyName, streamOrValue]) =>
+              streamOrValue != null
+                ? style(this.element, propertyName, streamOrValue)
+                : undefined,
+          )
+        : nullArr),
+      ...(description.animate
+        ? new Array<AnimationMessage>()
+            .concat(description.animate)
+            .map((source) => animate(this.element, source))
+        : nullArr),
+    ].filter((uninstaller) => uninstaller != null);
   }
 
   destroy(parent: Element) {
