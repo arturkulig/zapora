@@ -1,4 +1,5 @@
 import { ReceivedReceit, State, Subscribable } from "@zapora/core";
+import type { Uninstaller } from "./Uninstaller";
 
 export function applicator<VALUE>(
   element: any,
@@ -7,7 +8,7 @@ export function applicator<VALUE>(
   destroy: (element: any) => void,
   applyState: (element: any, value: VALUE) => void,
   applyValue?: (element: any, value: VALUE) => ReceivedReceit,
-) {
+): Uninstaller {
   if (isSubscribable<VALUE>(source)) {
     initialize(element);
     let destroyed = false;

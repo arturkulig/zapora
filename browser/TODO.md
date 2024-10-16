@@ -1,4 +1,3 @@
-- event handlers
 - children elements mod
 - children as a stream reconciliation
 - pushing context

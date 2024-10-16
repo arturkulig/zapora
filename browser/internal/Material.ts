@@ -1,4 +1,5 @@
-import { ElementDescription } from "../ElementDescription";
+import type { ElementDescription } from "../ElementDescription";
+import type { EventHandler } from "../EventHandler";
 import { animate, AnimationMessage } from "./animate";
 import {
   AnyPotentialElement,
@@ -6,21 +7,21 @@ import {
   ElementTagNames,
   namespacesFull,
 } from "./ElementNamespaces";
+import { event } from "./event";
 import { prop } from "./prop";
 import { style } from "./style";
+import { Uninstaller } from "./Uninstaller";
 
 const nullArr: never[] = [];
 
-export class Material {
+export class Material<
+  NS extends ElementNamespace,
+  TN extends ElementTagNames<NS>,
+> {
   element: AnyPotentialElement;
-  uninstallers: (() => void)[];
+  uninstallers: Uninstaller[];
 
-  constructor(
-    description: ElementDescription<
-      ElementNamespace,
-      ElementTagNames<ElementNamespace>
-    >,
-  ) {
+  constructor(description: ElementDescription<NS, TN>) {
     this.element = document.createElementNS(
       namespacesFull[description.namespace],
       description.tag,
@@ -40,6 +41,17 @@ export class Material {
               streamOrValue != null
                 ? style(this.element, propertyName, streamOrValue)
                 : undefined,
+          )
+        : nullArr),
+      ...(description.on
+        ? Object.entries(description.on).map(([propertyName, handler]) =>
+            handler != null
+              ? event(
+                  this.element,
+                  propertyName,
+                  handler as EventHandler<Event>,
+                )
+              : undefined,
           )
         : nullArr),
       ...(description.animate
