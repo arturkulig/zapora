@@ -7,7 +7,10 @@ export interface AnimationMessage {
   timing: number;
 }
 
-export function animate(element: any, source: StreamMaybe<AnimationMessage>) {
+export function applyAnimation(
+  element: any,
+  source: StreamMaybe<AnimationMessage>,
+) {
   let lastFrame: Keyframe = {};
 
   return applicator<AnimationMessage>(

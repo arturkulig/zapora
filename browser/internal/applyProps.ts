@@ -1,7 +1,11 @@
 import { applicator } from "./applicator";
 import { StreamMaybe } from "./StreamMaybe";
 
-export function prop(element: any, name: string, source: StreamMaybe<any>) {
+export function applyProps(
+  element: any,
+  name: string,
+  source: StreamMaybe<any>,
+) {
   let initial: any;
   return applicator(
     element,

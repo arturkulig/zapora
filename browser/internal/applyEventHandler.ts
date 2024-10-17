@@ -1,7 +1,7 @@
 import type { EventHandler } from "../EventHandler";
 import type { Uninstaller } from "./Uninstaller";
 
-export function event(
+export function applyEventHandler(
   element: Element,
   name: string,
   handler: EventHandler<Event>,

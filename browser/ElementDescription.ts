@@ -1,5 +1,5 @@
 import type { EventHandler } from "./EventHandler";
-import { AnimationMessage } from "./internal/animate";
+import { AnimationMessage } from "./internal/applyAnimation";
 import {
   ElementNamespace,
   ElementTagNames,
@@ -11,9 +11,15 @@ import { StreamMaybe } from "./internal/StreamMaybe";
 export interface ElementDescription<
   NS extends ElementNamespace,
   TN extends ElementTagNames<NS>,
-> {
+> extends ElementProperties<NS, TN> {
   namespace: NS;
   tag: TN;
+}
+
+export interface ElementProperties<
+  NS extends ElementNamespace,
+  TN extends ElementTagNames<NS>,
+> {
   props?: {
     [id in Extract<
       Exclude<keyof NamespaceToElementRepository[NS][TN], ImmutableProperties>,
@@ -51,4 +57,5 @@ export interface ElementDescription<
       HTMLElementEventMap[id]
     >;
   };
+  children?: Array<ElementDescription<any, any>>;
 }

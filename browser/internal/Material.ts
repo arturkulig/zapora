@@ -1,15 +1,16 @@
 import type { ElementDescription } from "../ElementDescription";
 import type { EventHandler } from "../EventHandler";
-import { animate, AnimationMessage } from "./animate";
+import { AnimationMessage, applyAnimation } from "./applyAnimation";
+import { applyChildren } from "./applyChildren";
+import { applyEventHandler } from "./applyEventHandler";
+import { applyProps } from "./applyProps";
+import { applyStyle } from "./applyStyle";
 import {
   AnyPotentialElement,
   ElementNamespace,
   ElementTagNames,
   namespacesFull,
 } from "./ElementNamespaces";
-import { event } from "./event";
-import { prop } from "./prop";
-import { style } from "./style";
 import { Uninstaller } from "./Uninstaller";
 
 const nullArr: never[] = [];
@@ -31,7 +32,7 @@ export class Material<
         ? Object.entries(description.props).map(
             ([propertyName, streamOrValue]) =>
               streamOrValue != null
-                ? prop(this.element, propertyName, streamOrValue)
+                ? applyProps(this.element, propertyName, streamOrValue)
                 : undefined,
           )
         : nullArr),
@@ -39,14 +40,14 @@ export class Material<
         ? Object.entries(description.style).map(
             ([propertyName, streamOrValue]) =>
               streamOrValue != null
-                ? style(this.element, propertyName, streamOrValue)
+                ? applyStyle(this.element, propertyName, streamOrValue)
                 : undefined,
           )
         : nullArr),
       ...(description.on
         ? Object.entries(description.on).map(([propertyName, handler]) =>
             handler != null
-              ? event(
+              ? applyEventHandler(
                   this.element,
                   propertyName,
                   handler as EventHandler<Event>,
@@ -57,7 +58,10 @@ export class Material<
       ...(description.animate
         ? new Array<AnimationMessage>()
             .concat(description.animate)
-            .map((source) => animate(this.element, source))
+            .map((source) => applyAnimation(this.element, source))
+        : nullArr),
+      ...(description.children
+        ? [applyChildren(this.element, description.children)]
         : nullArr),
     ].filter((uninstaller) => uninstaller != null);
   }

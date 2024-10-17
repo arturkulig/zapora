@@ -1,7 +1,9 @@
 import { Subscribable } from "@zapora/core";
 import { applicator } from "./applicator";
 
-export function style<Prop extends Extract<keyof CSSStyleDeclaration, string>>(
+export function applyStyle<
+  Prop extends Extract<keyof CSSStyleDeclaration, string>,
+>(
   element: any,
   propertyName: string,
   source: CSSStyleDeclaration[Prop] | Subscribable<CSSStyleDeclaration[Prop]>,

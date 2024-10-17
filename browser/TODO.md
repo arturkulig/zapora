@@ -1,4 +1,3 @@
-- children elements mod
 - children as a stream reconciliation
 - pushing context
 - receit given out by custom schedulers, add immediate application scheduler
