@@ -1,10 +1,10 @@
-import type { EventHandler } from "../EventHandler";
 import type { Uninstaller } from "./Uninstaller";
+import type { ZBEventHandler } from "./ZBEventHandler";
 
 export function applyEventHandler(
   element: Element,
   name: string,
-  handler: EventHandler<Event>,
+  handler: ZBEventHandler<Event>,
 ): Uninstaller {
   const [eventName, arg0, arg1, arg2] = name.split(":");
 

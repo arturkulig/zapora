@@ -3,7 +3,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "esnext",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["DOM", "ESNext"],
     "allowJs": false,
     "noImplicitAny": true,
     "removeComments": true,

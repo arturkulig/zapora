@@ -1,26 +1,22 @@
-import { ElementDescription, ElementProperties } from "./ElementDescription";
+import { ZBElement, ZBElementArguments } from "./ZBElement";
 import {
   ElementNamespace,
   ElementTagNames,
+  namespacesFull,
 } from "./internal/ElementNamespaces";
 
 const spaces = new Proxy(
   {},
   {
-    get(_, namespace: ElementNamespace) {
+    get(_, namespaceShort: ElementNamespace) {
       return new Proxy(
         {},
         {
-          get(_, tag: ElementTagNames<ElementNamespace>) {
-            return function (
-              properties?: ElementProperties<
-                ElementNamespace,
-                ElementTagNames<ElementNamespace>
-              >,
-            ) {
+          get(_, tag: string) {
+            return function (properties?: ZBElementArguments<any, any>) {
               return {
-                namespace,
-                tag,
+                namespace: namespacesFull[namespaceShort],
+                tag: tag.toUpperCase(),
                 ...properties,
               };
             };
@@ -32,8 +28,8 @@ const spaces = new Proxy(
 ) as {
   [ns in ElementNamespace]: {
     [tn in ElementTagNames<ns>]: (
-      properties?: ElementProperties<ns, tn>,
-    ) => ElementDescription<ns, tn>;
+      properties?: ZBElementArguments<ns, tn>,
+    ) => ZBElement<ns, tn>;
   };
 };
 

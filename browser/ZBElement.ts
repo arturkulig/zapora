@@ -1,4 +1,3 @@
-import type { EventHandler } from "./EventHandler";
 import { AnimationMessage } from "./internal/applyAnimation";
 import {
   ElementNamespace,
@@ -7,19 +6,21 @@ import {
 } from "./internal/ElementNamespaces";
 import { ImmutableProperties } from "./internal/ImmutableProperties";
 import { StreamMaybe } from "./internal/StreamMaybe";
+import type { ZBEventHandler } from "./internal/ZBEventHandler";
 
-export interface ElementDescription<
+export interface ZBElement<
   NS extends ElementNamespace,
   TN extends ElementTagNames<NS>,
-> extends ElementProperties<NS, TN> {
+> extends ZBElementArguments<NS, TN> {
   namespace: NS;
   tag: TN;
 }
 
-export interface ElementProperties<
+export interface ZBElementArguments<
   NS extends ElementNamespace,
   TN extends ElementTagNames<NS>,
 > {
+  key?: string | number;
   props?: {
     [id in Extract<
       Exclude<keyof NamespaceToElementRepository[NS][TN], ImmutableProperties>,
@@ -31,31 +32,35 @@ export interface ElementProperties<
   };
   animate?: AnimationMessage | AnimationMessage[];
   on?: {
-    [id in keyof HTMLElementEventMap]?: EventHandler<HTMLElementEventMap[id]>;
+    [id in keyof HTMLElementEventMap]?: ZBEventHandler<HTMLElementEventMap[id]>;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:passive`]?: EventHandler<
+    [id in keyof HTMLElementEventMap as `${id}:passive`]?: ZBEventHandler<
       HTMLElementEventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:passive:capture`]?: EventHandler<
+    [id in keyof HTMLElementEventMap as `${id}:passive:capture`]?: ZBEventHandler<
       HTMLElementEventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:passive:capture:once`]?: EventHandler<
+    [id in keyof HTMLElementEventMap as `${id}:passive:capture:once`]?: ZBEventHandler<
       HTMLElementEventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:capture`]?: EventHandler<
+    [id in keyof HTMLElementEventMap as `${id}:capture`]?: ZBEventHandler<
       HTMLElementEventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:capture:once`]?: EventHandler<
+    [id in keyof HTMLElementEventMap as `${id}:capture:once`]?: ZBEventHandler<
       HTMLElementEventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:once`]?: EventHandler<
+    [id in keyof HTMLElementEventMap as `${id}:once`]?: ZBEventHandler<
       HTMLElementEventMap[id]
     >;
   };
-  children?: Array<ElementDescription<any, any>>;
+  children?: StreamMaybe<ZBChildren>;
 }
+
+export type ZBChildren = ZBChild[];
+
+export type ZBChild = ZBElement<any, any>;

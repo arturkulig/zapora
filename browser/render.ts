@@ -1,18 +1,18 @@
-import { ElementDescription } from "./ElementDescription";
+import { ZBElement } from "./ZBElement";
 import {
   AnyPotentialElement,
   ElementNamespace,
   ElementTagNames,
 } from "./internal/ElementNamespaces";
-import { Material } from "./internal/Material";
+import { createElement } from "./internal/createElement";
 
 export function render<
   NS extends ElementNamespace,
   TN extends ElementTagNames<NS>,
->(element: ElementDescription<NS, TN>, root: HTMLElement) {
-  const app = new Material(element);
-  root.appendChild(app.element as AnyPotentialElement);
+>(element: ZBElement<NS, TN>, root: HTMLElement) {
+  const [app, destroy] = createElement(element);
+  root.appendChild(app as AnyPotentialElement);
   return () => {
-    app.destroy(root);
+    destroy();
   };
 }

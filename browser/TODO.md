@@ -1,4 +1,7 @@
-- children as a stream reconciliation
+- lifecycle: onMount, onUnmount
+- text content
+- fragments
+- custom components
 - pushing context
 - receit given out by custom schedulers, add immediate application scheduler
 - add frame-by-frame scheduler (applying only before another draw-frame and rejecting duplicate instructions)
