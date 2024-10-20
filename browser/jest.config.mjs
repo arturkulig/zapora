@@ -3,12 +3,7 @@ export default {
   preset: "ts-jest",
   testEnvironment: "jsdom",
   collectCoverage: true,
-  collectCoverageFrom: [
-    "./**/*.ts",
-    "!./**/*.spec.ts",
-    "!./internal/*.ts",
-    "!./tests/*.ts",
-  ],
+  collectCoverageFrom: ["./**/*.ts", "!./**/*.spec.ts", "!./tests/*.ts"],
   coverageDirectory: "./coverage",
   coverageReporters: ["text"],
   coverageProvider: "babel",

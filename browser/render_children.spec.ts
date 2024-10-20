@@ -28,7 +28,7 @@ describe("renders children", () => {
     expect(rendered.children.length).toBe(0);
   });
 
-  it("streaming children causes not to replace the nodes", async () => {
+  it("streaming  children causes not to replace the nodes", async () => {
     const children$ = new Atom<ZBChildren>([
       html.div({ props: { id: "1" } }),
       html.a(),
@@ -77,4 +77,44 @@ describe("renders children", () => {
     expect(rendered.id).toBe("");
     expect(rendered.children.length).toBe(0);
   });
+
+  // it("setting massive amounts of nodes", async () => {
+  //   const intendedLength = 2 ** 16 + 100;
+  //   const children$ = new Atom<ZBChildren>(
+  //     Array.from(new Array(intendedLength), () => html.div()),
+  //   );
+  //   const destroy = render(
+  //     html.base({
+  //       props: { id: "testId" },
+  //       children: children$,
+  //     }),
+  //     root,
+  //   );
+
+  //   const rendered = root.children[0];
+
+  //   // verify initial state
+  //   expect(rendered.children.length).toBe(intendedLength);
+
+  //   // update children (added)
+  //   await children$.next(
+  //     Array.from(new Array(intendedLength + 100), () => html.div()),
+  //   );
+  //   expect(rendered.children.length).toBe(intendedLength + 100);
+
+  //   // update children (removed)
+  //   await children$.next(
+  //     Array.from(new Array(intendedLength), () => html.div()),
+  //   );
+  //   expect(rendered.children.length).toBe(intendedLength);
+
+  //   // update children (cleared)
+  //   await children$.next([]);
+  //   expect(rendered.children.length).toBe(0);
+
+  //   // verify cleanup
+  //   destroy();
+  //   expect(rendered.id).toBe("");
+  //   expect(rendered.children.length).toBe(0);
+  // });
 });
