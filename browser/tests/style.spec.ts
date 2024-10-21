@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom, Subject } from "@zapora/core";
-import { render } from "./render";
+import { html } from "../element";
+import { render } from "../render";
 
 describe("renders styles", () => {
   let root: HTMLDivElement;
@@ -10,11 +11,9 @@ describe("renders styles", () => {
 
   it("applied and removed", () => {
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.div({
         style: { display: "block" },
-      },
+      }),
       root,
     );
 
@@ -29,11 +28,9 @@ describe("renders styles", () => {
     const style$ = new Subject<string>();
 
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.div({
         style: { display: style$ },
-      },
+      }),
       root,
     );
 
@@ -53,11 +50,9 @@ describe("renders styles", () => {
     const style$ = new Atom<string>("flex");
 
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.div({
         style: { display: style$ },
-      },
+      }),
       root,
     );
 

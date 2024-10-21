@@ -2,7 +2,6 @@ import { ZBElement, ZBElementArguments } from "./ZBElement";
 import {
   ElementNamespace,
   ElementTagNames,
-  namespacesFull,
 } from "./internal/ElementNamespaces";
 
 const spaces = new Proxy(
@@ -15,7 +14,7 @@ const spaces = new Proxy(
           get(_, tag: string) {
             return function (properties?: ZBElementArguments<any, any>) {
               return {
-                namespace: namespacesFull[namespaceShort],
+                namespace: namespaceShort,
                 tag: tag.toUpperCase(),
                 ...properties,
               };

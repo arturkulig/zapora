@@ -1,6 +1,5 @@
 import { ZBElement } from "./ZBElement";
 import {
-  AnyPotentialElement,
   ElementNamespace,
   ElementTagNames,
 } from "./internal/ElementNamespaces";
@@ -10,9 +9,13 @@ export function render<
   NS extends ElementNamespace,
   TN extends ElementTagNames<NS>,
 >(element: ZBElement<NS, TN>, root: HTMLElement) {
-  const [app, destroy] = createElement(element);
-  root.appendChild(app as AnyPotentialElement);
+  const [app, life] = createElement(element);
+  root.appendChild(app);
+  life.pushRefMounted();
+
   return () => {
-    destroy();
+    root.removeChild(app);
+    life.uninstallApplicators();
+    life.pushUnmounted();
   };
 }

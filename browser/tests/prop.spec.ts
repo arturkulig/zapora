@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom, Subject } from "@zapora/core";
-import { render } from "./render";
+import { html } from "../element";
+import { render } from "../render";
 
 describe("renders props", () => {
   let root: HTMLDivElement;
@@ -10,11 +11,9 @@ describe("renders props", () => {
 
   it("applied and removed", () => {
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.base({
         props: { id: "testId" },
-      },
+      }),
       root,
     );
 
@@ -29,11 +28,9 @@ describe("renders props", () => {
     const ids = new Subject<string>();
 
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.base({
         props: { id: ids },
-      },
+      }),
       root,
     );
 
@@ -53,11 +50,9 @@ describe("renders props", () => {
     const ids = new Atom<string>("start");
 
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.base({
         props: { id: ids },
-      },
+      }),
       root,
     );
 

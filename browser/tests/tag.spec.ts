@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { render } from "./render";
+import { html, math, svg } from "../element";
+import { render } from "../render";
 
 describe("renders tag", () => {
   let root: HTMLDivElement;
@@ -8,13 +9,7 @@ describe("renders tag", () => {
   });
 
   it("of HTML", () => {
-    const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
-      },
-      root,
-    );
+    const destroy = render(html.base(), root);
 
     expect(root.children.length).toBe(1);
     expect(root.children[0].tagName.toLowerCase()).toBe("base");
@@ -24,13 +19,7 @@ describe("renders tag", () => {
   });
 
   it("of SVG", () => {
-    const destroy = render(
-      {
-        namespace: "svg",
-        tag: "g",
-      },
-      root,
-    );
+    const destroy = render(svg.g(), root);
 
     expect(root.children.length).toBe(1);
     expect(root.children[0].tagName.toLowerCase()).toBe("g");
@@ -39,13 +28,7 @@ describe("renders tag", () => {
   });
 
   it("of MathML", () => {
-    const destroy = render(
-      {
-        namespace: "math",
-        tag: "msqrt",
-      },
-      root,
-    );
+    const destroy = render(math.msqrt(), root);
 
     expect(root.children.length).toBe(1);
     expect(root.children[0].tagName.toLowerCase()).toBe("msqrt");

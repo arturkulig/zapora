@@ -4,7 +4,7 @@ import { applyChildren } from "./applyChildren";
 import { applyEventHandler } from "./applyEventHandler";
 import { applyProps } from "./applyProps";
 import { applyStyle } from "./applyStyle";
-import { Uninstaller } from "./Uninstaller";
+import { Lifecycle } from "./Lifecycle";
 import type { ZBEventHandler } from "./ZBEventHandler";
 
 const nullArr: never[] = [];
@@ -12,7 +12,7 @@ const nullArr: never[] = [];
 export function applyDescription(
   description: ZBElementArguments<any, any>,
   element: Element,
-): Uninstaller {
+): Lifecycle {
   const uninstallers = [
     ...(description.props
       ? Object.entries(description.props).map(
@@ -51,9 +51,29 @@ export function applyDescription(
       : nullArr),
   ].filter((uninstaller) => uninstaller != null);
 
-  return () => {
-    for (const uninstalled of uninstallers.splice(0)) {
-      uninstalled();
-    }
+  return {
+    pushRefMounted: () => {
+      const { ref } = description;
+      if (!ref) {
+        return;
+      }
+      if (!ref.closed) {
+        ref.next?.(element);
+      }
+    },
+    uninstallApplicators: () => {
+      for (const uninstalled of uninstallers.splice(0)) {
+        uninstalled();
+      }
+    },
+    pushUnmounted: () => {
+      const { ref } = description;
+      if (!ref) {
+        return;
+      }
+      if (!ref.closed) {
+        ref.complete?.();
+      }
+    },
   };
 }

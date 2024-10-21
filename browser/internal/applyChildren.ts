@@ -1,16 +1,15 @@
 import { ZBChildren } from "../ZBElement";
 import { applicator } from "./applicator";
 import { applyDescription } from "./applyDescription";
+import { ChildNodesBuffer } from "./ChildNodesBuffer";
 import { createElement } from "./createElement";
+import { ElementNamespace, namespacesFull } from "./ElementNamespaces";
+import { Lifecycle } from "./Lifecycle";
 import { StreamMaybe } from "./StreamMaybe";
-import { Uninstaller } from "./Uninstaller";
-
-const ARG_MAX_LEN = 2 ** 16;
 
 export function applyChildren(element: any, source: StreamMaybe<ZBChildren>) {
-  let uninstallers: WeakMap<ChildNode, Uninstaller> = new WeakMap();
-
-  let key2Element: Record<string, ChildNode> = {};
+  const lifecycles = new WeakMap<ChildNode, Lifecycle>();
+  const elementToKey = new WeakMap<ChildNode, string | number>();
 
   return applicator(
     element,
@@ -21,23 +20,37 @@ export function applyChildren(element: any, source: StreamMaybe<ZBChildren>) {
     },
     // destroy
     (parent: Element) => {
-      for (const child of Array.from(parent.childNodes)) {
-        uninstallers.get(child)?.();
-      }
+      const children = Array.from(parent.childNodes);
       parent.replaceChildren();
+      for (const child of children) {
+        const life = lifecycles.get(child);
+        if (life) {
+          life.uninstallApplicators();
+          life.pushUnmounted();
+        }
+      }
     },
     // apply state
     (parent: Element, childrenDescriptions) => {
       for (const childDescription of childrenDescriptions) {
-        const [child, uninstaller] = createElement(childDescription);
-        uninstallers.set(child, uninstaller);
+        const [child, lifecycle] = createElement(childDescription);
+        lifecycles.set(child, lifecycle);
         parent.appendChild(child);
+        lifecycle.pushRefMounted();
       }
     },
     // apply streamed
     (parent: Element, childrenDescriptions) => {
+      const key2Element: Record<string, ChildNode> = {};
+      for (const child of Array.from(parent.childNodes)) {
+        const keyMaybe = elementToKey.get(child);
+        if (keyMaybe != null) {
+          key2Element[keyMaybe] = child;
+        }
+      }
+
       // formulate the future state of children
-      const right = new RenderingStrategy();
+      const right = new ChildNodesBuffer(parent);
       for (
         let rightIdx = 0;
         rightIdx < childrenDescriptions.length;
@@ -54,107 +67,41 @@ export function applyChildren(element: any, source: StreamMaybe<ZBChildren>) {
 
         const leftNode: ChildNode | undefined = childKey
           ? key2Element[childKey]
-          : parent.childNodes[rightIdx];
+          : !elementToKey.has(parent.childNodes[rightIdx])
+            ? parent.childNodes[rightIdx]
+            : undefined;
 
         if (
           leftNode instanceof Element &&
-          (leftNode.namespaceURI == null ||
-            leftNode.namespaceURI === rightDescription.namespace) &&
+          leftNode.namespaceURI ===
+            namespacesFull[rightDescription.namespace as ElementNamespace] &&
           leftNode.tagName === rightDescription.tag
         ) {
-          uninstallers.get(leftNode)?.();
-          uninstallers.set(
-            leftNode,
-            applyDescription(rightDescription, leftNode),
-          );
+          lifecycles.get(leftNode)?.uninstallApplicators();
+          const life = applyDescription(rightDescription, leftNode);
+          lifecycles.set(leftNode, life);
           right.appendExistingChild(leftNode, childKey);
         } else {
-          const [child, uninstaller] = createElement(rightDescription);
-          uninstallers.set(child, uninstaller);
+          const [child, life] = createElement(rightDescription);
+          if (rightDescription.key != null) {
+            elementToKey.set(child, rightDescription.key);
+          }
+          lifecycles.set(child, life);
           right.appendNewChild(child, childKey);
         }
       }
 
-      key2Element = right.key2Element;
+      const { removed, added } = right.flushRender();
 
-      // remove elements intended to be left out
-      const removedList = new Set(Array.from(parent.childNodes)).difference(
-        new Set(right.nodes),
-      );
-      for (const removedChild of removedList) {
-        uninstallers.get(removedChild)?.();
-        parent.removeChild(removedChild);
+      for (const node of removed) {
+        const life = lifecycles.get(node)!;
+        life.uninstallApplicators();
+        life.pushUnmounted();
       }
 
-      // replace children entirely if no children remain from the past
-      if (parent.childNodes.length === 0) {
-        if (right.nodes.length < ARG_MAX_LEN) {
-          parent.replaceChildren(...right.nodes);
-        } else {
-          while (right.nodes.length) {
-            parent.append(...right.nodes.splice(0, ARG_MAX_LEN));
-          }
-        }
-        return;
-      }
-
-      // while all nodes left are meant to stay
-      // add remaining new nodes
-      for (const segment of right.newSegments) {
-        if (segment.closing == null) {
-          if (segment.nodes.length < ARG_MAX_LEN) {
-            parent.append(...segment.nodes);
-          } else {
-            while (segment.nodes.length) {
-              parent.append(...segment.nodes.splice(0, ARG_MAX_LEN));
-            }
-          }
-        } else {
-          if (segment.nodes.length < ARG_MAX_LEN) {
-            segment.closing.before(...segment.nodes);
-          } else {
-            while (segment.nodes.length) {
-              segment.closing.before(...segment.nodes.splice(0, ARG_MAX_LEN));
-            }
-          }
-        }
+      for (const node of added) {
+        lifecycles.get(node)!.pushRefMounted();
       }
     },
   );
-}
-
-type RenderingStrategySegment = {
-  closing: ChildNode | null;
-  nodes: ChildNode[];
-};
-
-class RenderingStrategy {
-  nodes: ChildNode[] = [];
-  newSegments: RenderingStrategySegment[] = [{ closing: null, nodes: [] }];
-  key2Element: Record<string, ChildNode> = {};
-
-  appendExistingChild(child: ChildNode, key?: string) {
-    this.appendChild(child, key);
-    const last = this.newSegments[this.newSegments.length - 1];
-    if (last.closing == null) {
-      last.closing = child;
-    }
-  }
-
-  appendNewChild(child: ChildNode, key?: string) {
-    this.appendChild(child, key);
-    const last = this.newSegments[this.newSegments.length - 1];
-    if (last.closing != null) {
-      this.newSegments.push({ closing: null, nodes: [child] });
-    } else {
-      last.nodes.push(child);
-    }
-  }
-
-  private appendChild(child: ChildNode, key?: string) {
-    this.nodes.push(child);
-    if (typeof key === "string") {
-      this.key2Element[key] = child;
-    }
-  }
 }

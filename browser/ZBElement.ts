@@ -1,3 +1,4 @@
+import { Observer } from "@zapora/core";
 import { AnimationMessage } from "./internal/applyAnimation";
 import {
   ElementNamespace,
@@ -59,6 +60,7 @@ export interface ZBElementArguments<
     >;
   };
   children?: StreamMaybe<ZBChildren>;
+  ref?: Observer<NamespaceToElementRepository[NS][TN]>;
 }
 
 export type ZBChildren = ZBChild[];

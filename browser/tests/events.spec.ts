@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { render } from "./render";
+import { html } from "../element";
+import { render } from "../render";
 
 describe("renders props", () => {
   let root: HTMLDivElement;
@@ -10,16 +11,14 @@ describe("renders props", () => {
   it("applied and removed", () => {
     let clicks: { x: number; y: number }[] = [];
     const destroy = render(
-      {
-        namespace: "html",
-        tag: "base",
+      html.base({
         props: { id: "testId" },
         on: {
           "click:passive": (event) => {
             clicks.push({ x: event.screenX, y: event.screenY });
           },
         },
-      },
+      }),
       root,
     );
 
