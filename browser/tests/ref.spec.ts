@@ -61,6 +61,7 @@ describe("informs of references as render occurs", () => {
         expect(inspected.parentNode).toBeNull();
       },
     };
+
     const children$ = new Atom<ZBChildren>([
       html.div({
         ref,

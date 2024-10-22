@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import { Subject } from "@zapora/core";
 import { html } from "../element";
 import { render } from "../render";
 
@@ -9,7 +10,7 @@ describe("renders props", () => {
   });
 
   it("applied and removed", () => {
-    let clicks: { x: number; y: number }[] = [];
+    const clicks: { x: number; y: number }[] = [];
     const destroy = render(
       html.base({
         props: { id: "testId" },
@@ -35,6 +36,45 @@ describe("renders props", () => {
     expect(clicks).toEqual([{ x: 69, y: 420 }]);
 
     destroy();
-    expect(rendered.id).toBe("");
+  });
+
+  it("with an observer", () => {
+    const click$ = new Subject<MouseEvent>();
+    const clicks: { x: number; y: number }[] = [];
+    let clickDone = false;
+    click$.subscribe({
+      next: (point) => {
+        clicks.push({ x: point.screenX, y: point.screenY });
+      },
+      complete: () => {
+        clickDone = true;
+      },
+    });
+
+    const destroy = render(
+      html.base({
+        props: { id: "testId" },
+        on: {
+          "click:passive": click$,
+        },
+      }),
+      root,
+    );
+
+    const rendered = root.children[0];
+    expect(rendered.id).toBe("testId");
+
+    rendered.dispatchEvent(
+      new MouseEvent("click", {
+        screenX: 69,
+        screenY: 420,
+      }),
+    );
+
+    expect(clicks).toEqual([{ x: 69, y: 420 }]);
+    expect(clickDone).toBe(false);
+
+    destroy();
+    expect(clickDone).toBe(true);
   });
 });

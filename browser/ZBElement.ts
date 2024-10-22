@@ -65,4 +65,4 @@ export interface ZBElementArguments<
 
 export type ZBChildren = ZBChild[];
 
-export type ZBChild = ZBElement<any, any>;
+export type ZBChild = ZBElement<any, any> | string;

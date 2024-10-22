@@ -31,16 +31,20 @@ export function applyChildren(element: any, source: StreamMaybe<ZBChildren>) {
       }
     },
     // apply state
-    (parent: Element, childrenDescriptions) => {
-      for (const childDescription of childrenDescriptions) {
-        const [child, lifecycle] = createElement(childDescription);
-        lifecycles.set(child, lifecycle);
-        parent.appendChild(child);
-        lifecycle.pushRefMounted();
+    (parent: Element, rightChildDescList) => {
+      for (const rightChildDesc of rightChildDescList) {
+        if (typeof rightChildDesc === "string") {
+          parent.append(rightChildDesc);
+        } else {
+          const [child, lifecycle] = createElement(rightChildDesc);
+          lifecycles.set(child, lifecycle);
+          parent.appendChild(child);
+          lifecycle.pushRefMounted();
+        }
       }
     },
     // apply streamed
-    (parent: Element, childrenDescriptions) => {
+    (parent: Element, rightChildDescList) => {
       const key2Element: Record<string, ChildNode> = {};
       for (const child of Array.from(parent.childNodes)) {
         const keyMaybe = elementToKey.get(child);
@@ -51,47 +55,62 @@ export function applyChildren(element: any, source: StreamMaybe<ZBChildren>) {
 
       // formulate the future state of children
       const right = new ChildNodesBuffer(parent);
-      for (
-        let rightIdx = 0;
-        rightIdx < childrenDescriptions.length;
-        rightIdx++
-      ) {
-        const rightDescription = childrenDescriptions[rightIdx];
+      for (let rightIdx = 0; rightIdx < rightChildDescList.length; rightIdx++) {
+        const rightDesc = rightChildDescList[rightIdx];
 
-        const childKey =
-          rightDescription.key == null
+        const multiTypeKey =
+          typeof rightDesc === "object" ? rightDesc.key : undefined;
+        const singleTypeKey =
+          multiTypeKey == null
             ? undefined
-            : typeof rightDescription.key === "string"
-              ? `s${rightDescription.key}`
-              : `n${rightDescription.key}`;
+            : typeof multiTypeKey === "string"
+              ? `s${multiTypeKey}`
+              : `n${multiTypeKey}`;
 
-        const leftNode: ChildNode | undefined = childKey
-          ? key2Element[childKey]
-          : !elementToKey.has(parent.childNodes[rightIdx])
-            ? parent.childNodes[rightIdx]
-            : undefined;
+        // left node is
+        // one with matching key
+        // or one at the same position, but only if both don't have keys
+        const leftNode =
+          singleTypeKey == null
+            ? !elementToKey.has(parent.childNodes[rightIdx])
+              ? parent.childNodes[rightIdx]
+              : undefined
+            : key2Element[singleTypeKey];
+
+        if (typeof rightDesc === "string") {
+          if (leftNode && leftNode.nodeType === leftNode.TEXT_NODE) {
+            right.appendExistingChild(leftNode);
+          } else {
+            right.appendNewChild(document.createTextNode(rightDesc));
+          }
+          continue;
+        }
 
         if (
           leftNode instanceof Element &&
           leftNode.namespaceURI ===
-            namespacesFull[rightDescription.namespace as ElementNamespace] &&
-          leftNode.tagName === rightDescription.tag
+            namespacesFull[rightDesc.namespace as ElementNamespace] &&
+          leftNode.tagName === rightDesc.tag
         ) {
           lifecycles.get(leftNode)?.uninstallApplicators();
-          const life = applyDescription(rightDescription, leftNode);
+          const life = applyDescription(rightDesc, leftNode);
           lifecycles.set(leftNode, life);
-          right.appendExistingChild(leftNode, childKey);
+          right.appendExistingChild(leftNode, singleTypeKey);
         } else {
-          const [child, life] = createElement(rightDescription);
-          if (rightDescription.key != null) {
-            elementToKey.set(child, rightDescription.key);
+          const [child, life] = createElement(rightDesc);
+          if (singleTypeKey != null) {
+            elementToKey.set(child, singleTypeKey);
           }
           lifecycles.set(child, life);
-          right.appendNewChild(child, childKey);
+          right.appendNewChild(child, singleTypeKey);
         }
       }
 
+      // render
+
       const { removed, added } = right.flushRender();
+
+      // inform of lifecycle changes
 
       for (const node of removed) {
         const life = lifecycles.get(node)!;

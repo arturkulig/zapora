@@ -3,10 +3,6 @@ import { CONFIG } from "./config";
 export class ChildNodeController {
   constructor(private element: ChildNode) {}
 
-  get childNodes() {
-    return this.element.childNodes;
-  }
-
   before(nodes: (Node | string)[]) {
     if (nodes.length < CONFIG.ARG_MAX_LEN) {
       this.element.before(...nodes);

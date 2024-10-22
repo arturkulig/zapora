@@ -7,9 +7,9 @@ type RenderingStrategySegment = {
 };
 
 export class ChildNodesBuffer {
-  nodes: ChildNode[] = [];
+  nodes: Node[] = [];
   newSegments: RenderingStrategySegment[] = [{ closing: null, nodes: [] }];
-  key2Element: Record<string, ChildNode> = {};
+  key2Element: Record<string, Node> = {};
 
   constructor(private parent: Element) {}
 
@@ -31,7 +31,7 @@ export class ChildNodesBuffer {
     }
   }
 
-  private appendChild(child: ChildNode, key?: string) {
+  private appendChild(child: Node, key?: string) {
     this.nodes.push(child);
     if (typeof key === "string") {
       this.key2Element[key] = child;

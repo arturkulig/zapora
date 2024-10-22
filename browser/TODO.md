@@ -1,5 +1,3 @@
-- lifecycle: onMount, onUnmount
-- text content
 - fragments
 - custom components
 - pushing context

@@ -1,10 +1,11 @@
+import { getQueueingObserver } from "@zapora/core";
 import type { Uninstaller } from "./Uninstaller";
 import type { ZBEventHandler } from "./ZBEventHandler";
 
 export function applyEventHandler(
   element: Element,
   name: string,
-  handler: ZBEventHandler<Event>,
+  userHandler: ZBEventHandler<Event>,
 ): Uninstaller {
   const [eventName, arg0, arg1, arg2] = name.split(":");
 
@@ -20,15 +21,36 @@ export function applyEventHandler(
   );
   const once = !!(arg0 === "once" || arg1 === "once" || arg2 === "once");
 
-  element.addEventListener(eventName, handler, {
-    capture,
-    passive,
-    once,
-  });
+  const cautiousHandler =
+    typeof userHandler === "function"
+      ? userHandler
+      : getQueueingObserver(userHandler);
+  const next =
+    typeof cautiousHandler === "function"
+      ? cautiousHandler
+      : cautiousHandler.next;
+  const complete =
+    typeof cautiousHandler === "function"
+      ? undefined
+      : cautiousHandler.complete;
+  const context =
+    typeof cautiousHandler === "function" ? undefined : cautiousHandler;
+
+  const nextBound = next?.bind(context);
+  const completeBound = complete?.bind(context);
+
+  nextBound &&
+    element.addEventListener(eventName, nextBound, {
+      capture,
+      passive,
+      once,
+    });
 
   return () => {
-    element.removeEventListener(eventName, handler, {
-      capture,
-    });
+    nextBound &&
+      element.removeEventListener(eventName, nextBound, {
+        capture,
+      });
+    completeBound?.();
   };
 }
