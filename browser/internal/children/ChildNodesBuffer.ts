@@ -9,20 +9,19 @@ type RenderingStrategySegment = {
 export class ChildNodesBuffer {
   nodes: Node[] = [];
   newSegments: RenderingStrategySegment[] = [{ closing: null, nodes: [] }];
-  key2Element: Record<string, Node> = {};
 
   constructor(private parent: Element) {}
 
-  appendExistingChild(child: ChildNode, key?: string) {
-    this.appendChild(child, key);
+  appendExistingChild(child: ChildNode) {
+    this.appendChild(child);
     const last = this.newSegments[this.newSegments.length - 1];
     if (last.closing == null) {
       last.closing = child;
     }
   }
 
-  appendNewChild(child: ChildNode, key?: string) {
-    this.appendChild(child, key);
+  appendNewChild(child: ChildNode) {
+    this.appendChild(child);
     const last = this.newSegments[this.newSegments.length - 1];
     if (last.closing != null) {
       this.newSegments.push({ closing: null, nodes: [child] });
@@ -31,11 +30,8 @@ export class ChildNodesBuffer {
     }
   }
 
-  private appendChild(child: Node, key?: string) {
+  private appendChild(child: Node) {
     this.nodes.push(child);
-    if (typeof key === "string") {
-      this.key2Element[key] = child;
-    }
   }
 
   flushRender() {

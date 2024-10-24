@@ -1,16 +1,16 @@
 import type { ZBElementArguments } from "../ZBElement";
 import { AnimationMessage, applyAnimation } from "./applyAnimation";
-import { applyChildren } from "./applyChildren";
 import { applyEventHandler } from "./applyEventHandler";
 import { applyProps } from "./applyProps";
 import { applyStyle } from "./applyStyle";
+import { applyChildren } from "./children/applyChildren";
 import { Lifecycle } from "./Lifecycle";
 import type { ZBEventHandler } from "./ZBEventHandler";
 
 const nullArr: never[] = [];
 
 export function applyDescription(
-  description: ZBElementArguments<any, any>,
+  description: ZBElementArguments,
   element: Element,
 ): Lifecycle {
   const uninstallers = [

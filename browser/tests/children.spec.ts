@@ -104,26 +104,26 @@ describe("renders children", () => {
       html.a(),
     ]);
     const [child2] = Array.from(rendered.children);
-    expect(child2).not.toBe(child1);
     expect(child2.id).toBe("2");
+    expect(child2).not.toBe(child1);
 
     // update children KEY CHANGE - NUMBER
-    await children$.next([html.div({ key: 3, props: { id: "2" } }), html.a()]);
+    await children$.next([html.div({ key: 3, props: { id: "3" } }), html.a()]);
     const [child3] = Array.from(rendered.children);
+    expect(child3.id).toBe("3");
     expect(child3).not.toBe(child2);
-    expect(child3.id).toBe("2");
 
     // update children KEY CHANGE - NONE
     await children$.next([html.div({ props: { id: "4" } }), html.a()]);
     const [child4] = Array.from(rendered.children);
-    expect(child4).not.toBe(child3);
     expect(child4.id).toBe("4");
+    expect(child4).not.toBe(child3);
 
     // update children KEY NOT CHANGED
     await children$.next([html.div({ props: { id: "5" } }), html.a()]);
     const [child5] = Array.from(rendered.children);
-    expect(child5).toBe(child4);
     expect(child5.id).toBe("5");
+    expect(child5).toBe(child4);
 
     destroy();
   });

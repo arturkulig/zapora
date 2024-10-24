@@ -11,7 +11,7 @@ describe("renders props", () => {
 
   it("applied and removed", () => {
     const destroy = render(
-      html.base({
+      html.div({
         props: { id: "testId" },
       }),
       root,
@@ -25,11 +25,11 @@ describe("renders props", () => {
   });
 
   it("applied stream", async () => {
-    const ids = new Subject<string>();
+    const id$ = new Subject<string>();
 
     const destroy = render(
-      html.base({
-        props: { id: ids },
+      html.div({
+        props: { id: id$ },
       }),
       root,
     );
@@ -37,9 +37,9 @@ describe("renders props", () => {
     const rendered = root.children[0];
 
     expect(rendered.id).toBe("");
-    await ids.next("lorem");
+    await id$.next("lorem");
     expect(rendered.id).toBe("lorem");
-    await ids.next("ipsum");
+    await id$.next("ipsum");
     expect(rendered.id).toBe("ipsum");
 
     destroy();
@@ -47,11 +47,11 @@ describe("renders props", () => {
   });
 
   it("applied state", async () => {
-    const ids = new Atom<string>("start");
+    const id$ = new Atom<string>("start");
 
     const destroy = render(
-      html.base({
-        props: { id: ids },
+      html.div({
+        props: { id: id$ },
       }),
       root,
     );
@@ -59,12 +59,38 @@ describe("renders props", () => {
     const rendered = root.children[0];
 
     expect(rendered.id).toBe("start");
-    await ids.next("lorem");
+    await id$.next("lorem");
     expect(rendered.id).toBe("lorem");
-    await ids.next("ipsum");
+    await id$.next("ipsum");
     expect(rendered.id).toBe("ipsum");
 
     destroy();
     expect(rendered.id).toBe("");
+  });
+
+  it("stops applying after `complete` signal", async () => {
+    const id$ = new Atom<string>("start");
+
+    const destroy = render(
+      html.div({
+        props: { id: id$ },
+      }),
+      root,
+    );
+
+    const rendered = root.children[0];
+
+    expect(rendered.id).toBe("start");
+
+    await id$.next("lorem");
+    expect(rendered.id).toBe("lorem");
+
+    await id$.complete();
+    expect(rendered.id).toBe("");
+
+    await id$.next("ipsum");
+    expect(rendered.id).toBe("");
+
+    destroy();
   });
 });

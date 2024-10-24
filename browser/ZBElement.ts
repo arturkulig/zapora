@@ -1,32 +1,28 @@
-import { Observer } from "@zapora/core";
-import { AnimationMessage } from "./internal/applyAnimation";
-import {
-  ElementNamespace,
-  ElementTagNames,
-  NamespaceToElementRepository,
-} from "./internal/ElementNamespaces";
-import { ImmutableProperties } from "./internal/ImmutableProperties";
-import { StreamMaybe } from "./internal/StreamMaybe";
+import type { Observer } from "@zapora/core";
+import type { AnimationMessage } from "./internal/applyAnimation";
+import type { ChildKey } from "./internal/children/ChildKey";
+import type {
+  fragmentNamespace,
+  fragmentTagName,
+} from "./internal/children/fragmentSymbols";
+import type { ElementNamespace } from "./internal/ElementNamespaces";
+import type { ImmutableProperties } from "./internal/ImmutableProperties";
+import type { StreamMaybe } from "./internal/StreamMaybe";
 import type { ZBEventHandler } from "./internal/ZBEventHandler";
 
-export interface ZBElement<
-  NS extends ElementNamespace,
-  TN extends ElementTagNames<NS>,
-> extends ZBElementArguments<NS, TN> {
-  namespace: NS;
-  tag: TN;
+export interface ZBElement<ElementType = any>
+  extends ZBElementArguments<ElementType> {
+  namespace: ElementNamespace;
+  tag: string;
 }
 
-export interface ZBElementArguments<
-  NS extends ElementNamespace,
-  TN extends ElementTagNames<NS>,
-> {
-  key?: string | number;
+export interface ZBElementArguments<ElementType = any> {
+  key?: ChildKey;
   props?: {
     [id in Extract<
-      Exclude<keyof NamespaceToElementRepository[NS][TN], ImmutableProperties>,
+      Exclude<keyof ElementType, ImmutableProperties>,
       string
-    >]?: StreamMaybe<NamespaceToElementRepository[NS][TN][id]>;
+    >]?: StreamMaybe<ElementType[id]>;
   };
   style?: {
     [id in keyof CSSStyleDeclaration]?: StreamMaybe<CSSStyleDeclaration[id]>;
@@ -60,9 +56,16 @@ export interface ZBElementArguments<
     >;
   };
   children?: StreamMaybe<ZBChildren>;
-  ref?: Observer<NamespaceToElementRepository[NS][TN]>;
+  ref?: Observer<ElementType>;
 }
 
 export type ZBChildren = ZBChild[];
 
-export type ZBChild = ZBElement<any, any> | string;
+export type ZBFragment = {
+  namespace: typeof fragmentNamespace;
+  tag: typeof fragmentTagName;
+  children: ZBChildren;
+  key?: ChildKey;
+};
+
+export type ZBChild = ZBFragment | ZBElement | string;

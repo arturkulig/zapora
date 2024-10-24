@@ -1,21 +1,16 @@
 import { ZBElement } from "./ZBElement";
-import {
-  ElementNamespace,
-  ElementTagNames,
-} from "./internal/ElementNamespaces";
-import { createElement } from "./internal/createElement";
+import { applyDescription } from "./internal/applyDescription";
+import { createDomElement } from "./internal/createDomElement";
 
-export function render<
-  NS extends ElementNamespace,
-  TN extends ElementTagNames<NS>,
->(element: ZBElement<NS, TN>, root: HTMLElement) {
-  const [app, life] = createElement(element);
-  root.appendChild(app);
-  life.pushRefMounted();
+export function render(element: ZBElement, root: HTMLElement) {
+  const appNode = createDomElement(element);
+  const appLife = applyDescription(element, appNode);
+  root.appendChild(appNode);
+  appLife.pushRefMounted();
 
   return () => {
-    root.removeChild(app);
-    life.uninstallApplicators();
-    life.pushUnmounted();
+    root.removeChild(appNode);
+    appLife.uninstallApplicators();
+    appLife.pushUnmounted();
   };
 }

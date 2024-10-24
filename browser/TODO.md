@@ -1,4 +1,3 @@
-- fragments
 - custom components
 - pushing context
 - receit given out by custom schedulers, add immediate application scheduler
