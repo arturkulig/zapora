@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom } from "@zapora/core";
 import { html } from "../element";
+import { ZBChildList } from "../publicTypes";
 import { render } from "../render";
-import { ZBChildren } from "../ZBElement";
 
 describe("renders text nodes", () => {
   let root: HTMLDivElement;
@@ -22,14 +22,14 @@ describe("renders text nodes", () => {
       root,
     );
 
-    expect(root.childNodes[0].childNodes.length).toBe(3);
     expect(root.textContent).toBe("123456789");
+    expect(root.childNodes[0].childNodes.length).toBe(3);
 
     destroy();
   });
 
   it("recomputes text content", async () => {
-    const children$ = new Atom<ZBChildren>([
+    const children$ = new Atom<ZBChildList>([
       "n:",
       html.p({ children: ["123"] }),
       "456",

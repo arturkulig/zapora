@@ -1,6 +1,6 @@
-import { ZBElement } from "./ZBElement";
 import { applyDescription } from "./internal/applyDescription";
 import { createDomElement } from "./internal/createDomElement";
+import { ZBElement } from "./publicTypes";
 
 export function render(element: ZBElement, root: HTMLElement) {
   const appNode = createDomElement(element);

@@ -1,60 +1,129 @@
-import { ZBChildren, ZBFragment } from "../../ZBElement";
-import { fragmentNamespace, fragmentTagName } from "./fragmentSymbols";
-import { ZBPathedFinalChildren, Zone } from "./WithPath";
+import { Atom } from "@zapora/core";
+import { ZBChild, ZBChildren } from "../../publicTypes";
+import { ChildKey } from "./ChildKey";
+import { ZB_NS, ZB_TAG_COMPONENT, ZB_TAG_FRAGMENT } from "./fragmentSymbols";
+import { mapValues } from "./mapValues";
+import {
+  isSamePath,
+  ZBPathedFinalChildren,
+  ZoneOrigin,
+  ZonePath,
+} from "./ZonePath";
+
+export interface ComponentStateEntry {
+  path: ZonePath;
+  states: Record<string, Atom<any>>;
+}
 
 export function resolveNonElements(
   children: ZBChildren,
-): ZBPathedFinalChildren {
-  const result: ZBPathedFinalChildren = [];
+  path: ZonePath,
+  localStates: ComponentStateEntry[],
+  result: ZBPathedFinalChildren,
+) {
+  if (Array.isArray(children)) {
+    for (let index = 0; index < children.length; index++) {
+      resolveNonElement(children[index], index, path, localStates, result);
+    }
+  } else {
+    resolveNonElement(children, 0, path, localStates, result);
+  }
+}
 
-  for (let index = 0; index < children.length; index++) {
-    const child = children[index];
+function resolveNonElement(
+  child: ZBChild,
+  index: number,
+  path: ZonePath,
+  localStates: ComponentStateEntry[],
+  result: ZBPathedFinalChildren,
+) {
+  if (typeof child === "string") {
+    result.push({
+      path: [{ origin: null, position: index }],
+      item: child,
+    });
+    return;
+  }
 
-    if (typeof child === "object") {
-      if (
-        child.namespace === fragmentNamespace &&
-        child.tag === fragmentTagName
-      ) {
-        const fragment = child as ZBFragment;
-        if (fragment.children) {
-          const fragmentZone: Zone =
-            fragment.key == null
-              ? {
-                  origin: true,
-                  position: index,
-                }
-              : {
-                  origin: true,
-                  key: fragment.key,
-                };
+  if (child.namespace === ZB_NS && child.tag === ZB_TAG_FRAGMENT) {
+    if (child.children.length) {
+      const fragmentZonePath = [...path, makeZone(true, index, child.key)];
 
-          for (const fragmentChild of resolveNonElements(fragment.children)) {
-            result.push({
-              path: [fragmentZone, ...fragmentChild.path],
-              item: fragmentChild.item,
-            });
-          }
-        }
-      } else {
-        result.push({
-          item: child,
-          path: child.key
-            ? [
-                {
-                  origin: null,
-                  key: child.key,
-                },
-              ]
-            : [{ origin: null, position: index }],
-        });
-      }
-    } else {
-      result.push({
-        path: [{ origin: null, position: index }],
-        item: child,
-      });
+      resolveNonElements(child.children, fragmentZonePath, localStates, result);
+    }
+    return;
+  }
+
+  if (child.namespace === ZB_NS && child.tag === ZB_TAG_COMPONENT) {
+    const componentPath = [
+      ...path,
+      makeZone(child.component, index, child.key),
+    ];
+    const componentState = selectLocalState(
+      localStates,
+      componentPath,
+      child.props,
+      child.defaultStateValues,
+    );
+    const componentUnresolvedChildren = child.component(
+      child.props,
+      componentState,
+    );
+
+    Array.isArray(componentUnresolvedChildren)
+      ? resolveNonElements(
+          componentUnresolvedChildren,
+          componentPath,
+          localStates,
+          result,
+        )
+      : resolveNonElement(
+          componentUnresolvedChildren,
+          0,
+          componentPath,
+          localStates,
+          result,
+        );
+    return;
+  }
+
+  result.push({
+    item: child,
+    path: [...path, makeZone(null, index, child.key)],
+  });
+}
+
+function makeZone(origin: ZoneOrigin, position: number, key?: ChildKey) {
+  return key != null ? { origin, key } : { origin, position };
+}
+
+function selectLocalState<PROPS>(
+  localStates: ComponentStateEntry[],
+  componentPath: ZonePath,
+  props: PROPS,
+  defaultStateValues: Record<string, any> | undefined,
+) {
+  for (const entry of localStates) {
+    if (isSamePath(entry.path, componentPath)) {
+      return entry.states;
     }
   }
 
-  return result;
+  if (!defaultStateValues) {
+    return {};
+  }
+
+  const entry: ComponentStateEntry = {
+    path: componentPath,
+    states: mapValues(
+      typeof defaultStateValues === "function"
+        ? defaultStateValues(props)
+        : defaultStateValues,
+      (defaultValue) => new Atom(defaultValue),
+    ),
+  };
+
+  localStates.push(entry);
+
+  return entry.states;
 }

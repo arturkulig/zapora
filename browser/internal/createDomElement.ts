@@ -1,4 +1,4 @@
-import type { ZBElement } from "../ZBElement";
+import type { ZBElement } from "../publicTypes";
 import { ElementNamespace, namespacesFull } from "./ElementNamespaces";
 
 export function createDomElement(description: ZBElement): Element {

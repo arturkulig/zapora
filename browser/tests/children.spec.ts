@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom } from "@zapora/core";
 import { html } from "../element";
 import { CONFIG } from "../internal/config";
+import { ZBChildList, ZBChildren } from "../publicTypes";
 import { render } from "../render";
-import { ZBChildren } from "../ZBElement";
 
 describe("renders children", () => {
   let root: HTMLDivElement;
@@ -30,7 +30,7 @@ describe("renders children", () => {
   });
 
   it("streaming  children causes not to replace the nodes", async () => {
-    const children$ = new Atom<ZBChildren>([
+    const children$ = new Atom<ZBChildList>([
       html.div({ props: { id: "1" } }),
       html.a(),
     ]);
@@ -80,7 +80,7 @@ describe("renders children", () => {
   });
 
   it("keys make items unique", async () => {
-    const children$ = new Atom<ZBChildren>([
+    const children$ = new Atom<ZBChildList>([
       html.div({ props: { id: "1" } }),
       html.a(),
     ]);
@@ -99,16 +99,13 @@ describe("renders children", () => {
     expect(child1.id).toBe("1");
 
     // update children KEY CHANGE - STRING
-    await children$.next([
-      html.div({ key: "2", props: { id: "2" } }),
-      html.a(),
-    ]);
+    await children$.next([html.div.key`2`({ props: { id: "2" } }), html.a()]);
     const [child2] = Array.from(rendered.children);
     expect(child2.id).toBe("2");
     expect(child2).not.toBe(child1);
 
     // update children KEY CHANGE - NUMBER
-    await children$.next([html.div({ key: 3, props: { id: "3" } }), html.a()]);
+    await children$.next([html.div.key`3`({ props: { id: "3" } }), html.a()]);
     const [child3] = Array.from(rendered.children);
     expect(child3.id).toBe("3");
     expect(child3).not.toBe(child2);
@@ -128,13 +125,49 @@ describe("renders children", () => {
     destroy();
   });
 
+  it("swaps items correctly", async () => {
+    const children$ = new Atom<ZBChildren>([
+      html.div.key`A`({ props: { id: "A" } }),
+      html.div.key`B`({ props: { id: "B" } }),
+      html.div.key`C`({ props: { id: "C" } }),
+    ]);
+    const destroy = render(
+      html.div({
+        props: { id: "testId" },
+        children: children$,
+      }),
+      root,
+    );
+
+    const rendered = root.children[0];
+
+    // verify initial state
+    const [child1A, child1B, child1C] = Array.from(rendered.children);
+    expect(child1A.id).toBe("A");
+    expect(child1B.id).toBe("B");
+    expect(child1C.id).toBe("C");
+
+    // update children: swap
+    await children$.next([
+      html.div.key`C`({ props: { id: "C" } }),
+      html.div.key`B`({ props: { id: "B" } }),
+      html.div.key`A`({ props: { id: "A" } }),
+    ]);
+    const [child2A, child2B, child2C] = Array.from(rendered.children);
+    expect(child2A.id).toBe("C");
+    expect(child2B.id).toBe("B");
+    expect(child2C.id).toBe("A");
+
+    destroy();
+  });
+
   describe("massive amounts of nodes", () => {
     CONFIG.ARG_MAX_LEN = 8;
 
     it("setting massive amounts of nodes", async () => {
       const intendedLength = CONFIG.ARG_MAX_LEN + 1;
 
-      const children$ = new Atom<ZBChildren>(
+      const children$ = new Atom<ZBChildList>(
         Array.from(new Array(intendedLength), () => html.div()),
       );
       const destroy = render(

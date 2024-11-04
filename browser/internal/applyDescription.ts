@@ -1,4 +1,4 @@
-import type { ZBElementArguments } from "../ZBElement";
+import type { ZBElementArguments } from "../publicTypes";
 import { AnimationMessage, applyAnimation } from "./applyAnimation";
 import { applyEventHandler } from "./applyEventHandler";
 import { applyProps } from "./applyProps";

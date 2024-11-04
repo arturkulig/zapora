@@ -1,10 +1,15 @@
-import { ZBElement } from "../../ZBElement";
+import { ZBElement } from "../../publicTypes";
 import { applyDescription } from "../applyDescription";
 import { createDomElement } from "../createDomElement";
 import { ElementNamespace, namespacesFull } from "../ElementNamespaces";
 import { Lifecycle } from "../Lifecycle";
 import { ChildNodesBuffer } from "./ChildNodesBuffer";
-import { FinalChild, ZBPathedFinalChildren, Zone, ZonePath } from "./WithPath";
+import {
+  FinalChild,
+  isSamePath,
+  ZBPathedFinalChildren,
+  ZonePath,
+} from "./ZonePath";
 
 export function readyChildrenBuffer(
   parent: Element,
@@ -83,34 +88,6 @@ function findOfKey(
   }
 
   return foundAtPosition;
-}
-
-function isSamePath(pathA: ZonePath | undefined, pathB: ZonePath | undefined) {
-  if (pathA == null && pathB == null) {
-    return true;
-  }
-  if (pathA == null || pathB == null) {
-    return false;
-  }
-  if (pathA.length !== pathB.length) {
-    return false;
-  }
-  for (let i = 0; i < pathA.length; i++) {
-    if (!isSameZone(pathA[i], pathB[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function isSameZone(zoneA: Zone, zoneB: Zone) {
-  return (
-    zoneA.origin === zoneB.origin &&
-    (("key" in zoneA && "key" in zoneB && zoneA.key === zoneB.key) ||
-      ("position" in zoneA &&
-        "position" in zoneB &&
-        zoneA.position === zoneB.position))
-  );
 }
 
 function isSameTextNode(node: Node, desc: string): node is Text {

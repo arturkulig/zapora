@@ -1,1 +1,1 @@
-export type ChildKey = string | number;
+export type ChildKey = string;

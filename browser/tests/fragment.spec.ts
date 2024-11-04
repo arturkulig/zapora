@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom } from "@zapora/core";
 import { html } from "../element";
 import { fragment } from "../fragment";
+import { ZBChildList } from "../publicTypes";
 import { render } from "../render";
-import { ZBChildren } from "../ZBElement";
 
 describe("renders fragments", () => {
   let root: HTMLDivElement;
@@ -12,11 +12,11 @@ describe("renders fragments", () => {
   });
 
   it("transparent when structure is stable", async () => {
-    const initial: ZBChildren = [
+    const initial: ZBChildList = [
       html.div({ props: { id: "e1" } }),
-      fragment`A`([html.div({ props: { id: "e2" } })]),
+      fragment.key`A`([html.div({ props: { id: "e2" } })]),
     ];
-    const children$ = new Atom<ZBChildren>(initial);
+    const children$ = new Atom<ZBChildList>(initial);
     const destroy = render(
       html.div({
         props: { id: "testId" },
@@ -43,9 +43,9 @@ describe("renders fragments", () => {
   });
 
   it("going off fragment gets recognized as a change in structure", async () => {
-    const children$ = new Atom<ZBChildren>([
+    const children$ = new Atom<ZBChildList>([
       html.div({ props: { id: "e1" } }),
-      fragment`A`([html.div({ props: { id: "e2" } })]),
+      fragment.key`A`([html.div({ props: { id: "e2" } })]),
     ]);
     const destroy = render(
       html.div({
@@ -72,11 +72,11 @@ describe("renders fragments", () => {
   });
 
   it("nested fragments extend fragments behaviour", async () => {
-    const children$ = new Atom<ZBChildren>([
+    const children$ = new Atom<ZBChildList>([
       html.div({ props: { id: "e1" } }),
-      fragment`outer`([
-        fragment`innerA`([html.div({ props: { id: "e2" } })]),
-        fragment`innerB`([html.div({ props: { id: "e3" } })]),
+      fragment.key`outer`([
+        fragment.key`innerA`([html.div({ props: { id: "e2" } })]),
+        fragment.key`innerB`([html.div({ props: { id: "e3" } })]),
       ]),
     ]);
     const destroy = render(
@@ -92,8 +92,8 @@ describe("renders fragments", () => {
 
     await children$.next([
       html.div({ props: { id: "e1" } }),
-      fragment`outer`([
-        fragment`innerA`([html.div({ props: { id: "e2" } })]),
+      fragment.key`outer`([
+        fragment.key`innerA`([html.div({ props: { id: "e2" } })]),
         fragment([html.div({ props: { id: "e3" } })]),
       ]),
     ]);

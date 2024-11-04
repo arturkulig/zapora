@@ -8,12 +8,14 @@ type RenderingStrategySegment = {
 
 export class ChildNodesBuffer {
   nodes: Node[] = [];
+  existingSegments: Node[] = [];
   newSegments: RenderingStrategySegment[] = [{ closing: null, nodes: [] }];
 
   constructor(private parent: Element) {}
 
   appendExistingChild(child: ChildNode) {
     this.appendChild(child);
+    this.existingSegments.push(child);
     const last = this.newSegments[this.newSegments.length - 1];
     if (last.closing == null) {
       last.closing = child;
@@ -35,6 +37,8 @@ export class ChildNodesBuffer {
   }
 
   flushRender() {
+    // remove all nodes meant to be removed
+    // leaving only those that are present on both sides
     const removedNodes = [
       ...new Set(Array.from(this.parent.childNodes)).difference(
         new Set(this.nodes),
@@ -52,6 +56,12 @@ export class ChildNodesBuffer {
       // ...apply all instantly
       new ParentNodeController(this.parent).replaceChildren(this.nodes);
     } else {
+      // swap positions of existing elements
+      for (let index = 0; index < this.existingSegments.length; index++) {
+        if (this.parent.childNodes[index] !== this.existingSegments[index]) {
+          this.parent.childNodes[index].before(this.existingSegments[index]);
+        }
+      }
       // ...add new in segments
       for (const segment of this.newSegments) {
         if (segment.closing == null) {

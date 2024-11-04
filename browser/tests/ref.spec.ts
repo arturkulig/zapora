@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom } from "@zapora/core";
 import { html } from "../element";
+import { ZBChildList } from "../publicTypes";
 import { render } from "../render";
-import { ZBChildren } from "../ZBElement";
 
 describe("informs of references as render occurs", () => {
   let root: HTMLDivElement;
@@ -62,7 +62,7 @@ describe("informs of references as render occurs", () => {
       },
     };
 
-    const children$ = new Atom<ZBChildren>([
+    const children$ = new Atom<ZBChildList>([
       html.div({
         ref,
       }),
@@ -91,8 +91,7 @@ describe("informs of references as render occurs", () => {
     expect(completeCalled).toBe(0);
 
     await children$.next([
-      html.div({
-        key: "susan",
+      html.div.key`susan`({
         ref,
       }),
     ]);

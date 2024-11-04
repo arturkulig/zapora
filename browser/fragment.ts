@@ -1,29 +1,21 @@
-import {
-  fragmentNamespace,
-  fragmentTagName,
-} from "./internal/children/fragmentSymbols";
-import { ZBChildren, ZBFragment } from "./ZBElement";
+import { ZB_NS, ZB_TAG_FRAGMENT } from "./internal/children/fragmentSymbols";
+import { ZBChildList, ZBFragment } from "./publicTypes";
 
-export function fragment(
-  key: TemplateStringsArray,
-): (children: ZBChildren) => ZBFragment;
-export function fragment(children: ZBChildren): ZBFragment;
-export function fragment(
-  arg: TemplateStringsArray | ZBChildren,
-): ZBFragment | ((children: ZBChildren) => ZBFragment) {
-  if ("raw" in arg) {
-    const keyFinal = arg.join("");
-    return (children: ZBChildren) => ({
-      namespace: fragmentNamespace,
-      tag: fragmentTagName,
-      key: keyFinal,
-      children,
-    });
-  } else {
-    return {
-      namespace: fragmentNamespace,
-      tag: fragmentTagName,
-      children: arg,
-    } satisfies ZBFragment;
-  }
+function fragmentWithKey(key: TemplateStringsArray) {
+  return (children: ZBChildList): ZBFragment => ({
+    namespace: ZB_NS,
+    tag: ZB_TAG_FRAGMENT,
+    key: key.join(""),
+    children,
+  });
 }
+
+function fragmentWoKey(children: ZBChildList): ZBFragment {
+  return {
+    namespace: ZB_NS,
+    tag: ZB_TAG_FRAGMENT,
+    children,
+  };
+}
+
+export const fragment = Object.assign(fragmentWoKey, { key: fragmentWithKey });

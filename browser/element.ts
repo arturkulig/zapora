@@ -1,9 +1,9 @@
-import { ZBElement, ZBElementArguments } from "./ZBElement";
 import {
   ElementNamespace,
   ElementTagNames,
   NamespaceToElementRepository,
 } from "./internal/ElementNamespaces";
+import { ZBElement, ZBElementArguments } from "./publicTypes";
 
 const spaces = new Proxy(
   {},
@@ -13,13 +13,31 @@ const spaces = new Proxy(
         {},
         {
           get(_, tag: string) {
-            return function (properties?: ZBElementArguments<any>) {
-              return {
-                namespace: namespaceShort,
-                tag: tag.toUpperCase(),
-                ...properties,
-              };
-            };
+            return Object.assign(
+              function createElement(
+                properties?: ZBElementArguments<any>,
+              ): ZBElement {
+                return {
+                  namespace: namespaceShort,
+                  tag: tag.toUpperCase(),
+                  ...properties,
+                };
+              },
+              {
+                key: function establishElementsKey(key: TemplateStringsArray) {
+                  return function createElementWithKey(
+                    properties?: ZBElementArguments<any>,
+                  ): ZBElement {
+                    return {
+                      namespace: namespaceShort,
+                      tag: tag.toUpperCase(),
+                      key: key.join(""),
+                      ...properties,
+                    };
+                  };
+                },
+              },
+            );
           },
         },
       );
@@ -27,9 +45,16 @@ const spaces = new Proxy(
   },
 ) as {
   [ns in ElementNamespace]: {
-    [tn in ElementTagNames<ns>]: (
-      properties?: ZBElementArguments<NamespaceToElementRepository[ns][tn]>,
-    ) => ZBElement;
+    [tn in ElementTagNames<ns>]: {
+      (
+        properties?: ZBElementArguments<NamespaceToElementRepository[ns][tn]>,
+      ): ZBElement;
+      key: (
+        key: TemplateStringsArray,
+      ) => (
+        properties?: ZBElementArguments<NamespaceToElementRepository[ns][tn]>,
+      ) => ZBElement;
+    };
   };
 };
 

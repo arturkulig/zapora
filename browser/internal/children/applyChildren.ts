@@ -1,12 +1,12 @@
-import { ZBChildren } from "../../ZBElement";
+import { ZBChildren } from "../../publicTypes";
 import { applicator } from "../applicator";
 import { applyDescription } from "../applyDescription";
 import { createDomElement } from "../createDomElement";
 import { Lifecycle } from "../Lifecycle";
 import { StreamMaybe } from "../StreamMaybe";
 import { readyChildrenBuffer } from "./readyChildrenBuffer";
-import { resolveNonElements } from "./resolveNonElements";
-import { ZonePath } from "./WithPath";
+import { ComponentStateEntry, resolveNonElements } from "./resolveNonElements";
+import { ZBPathedFinalChildren, ZonePath } from "./ZonePath";
 
 export function applyChildren(
   parent: Element,
@@ -14,6 +14,7 @@ export function applyChildren(
 ) {
   const lifecycles = new WeakMap<Node, Lifecycle>();
   const keyMap = new WeakMap<Node, ZonePath>();
+  const localStates: ComponentStateEntry[] = [];
 
   return applicator(
     parent,
@@ -36,7 +37,8 @@ export function applyChildren(
     },
     // apply state
     (parent: Element, rightChildDescList) => {
-      const resolvedRight = resolveNonElements(rightChildDescList);
+      const resolvedRight: ZBPathedFinalChildren = [];
+      resolveNonElements(rightChildDescList, [], localStates, resolvedRight);
 
       for (const rightChildDesc of resolvedRight) {
         let added: Node;
@@ -57,7 +59,8 @@ export function applyChildren(
     },
     // apply streamed
     (parent: Element, rightChildDescList) => {
-      const resolvedRight = resolveNonElements(rightChildDescList);
+      const resolvedRight: ZBPathedFinalChildren = [];
+      resolveNonElements(rightChildDescList, [], localStates, resolvedRight);
 
       // formulate the future state of children
       const buffer = readyChildrenBuffer(
