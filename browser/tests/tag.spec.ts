@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { html, math, svg } from "../element";
-import { render } from "../render";
+import { html, math, render, svg } from "../index";
 
 describe("renders tag", () => {
   let root: HTMLDivElement;

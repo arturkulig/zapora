@@ -1,6 +1,6 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { SimpleSubscription } from "./SimpleSubscription";
+import { then } from "./then";
 
 export function range(min = 0, max = Number.MAX_SAFE_INTEGER) {
   return new Observable<number>((observer) => {

@@ -1,5 +1,6 @@
 import { ReceivedReceit, State, Subscribable } from "@zapora/core";
-import type { Uninstaller } from "./Uninstaller";
+
+export type Uninstaller = () => void;
 
 export function applicator<VALUE>(
   element: any,

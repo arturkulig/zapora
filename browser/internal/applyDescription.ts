@@ -1,17 +1,18 @@
-import type { ZBElementArguments } from "../publicTypes";
+import type { ZBElementArguments, ZBEventHandler } from "../public/types";
 import { AnimationMessage, applyAnimation } from "./applyAnimation";
+import { applyChildren } from "./applyChildren";
 import { applyEventHandler } from "./applyEventHandler";
 import { applyProps } from "./applyProps";
 import { applyStyle } from "./applyStyle";
-import { applyChildren } from "./children/applyChildren";
+import { ContextComposer } from "./ContextComposer";
 import { Lifecycle } from "./Lifecycle";
-import type { ZBEventHandler } from "./ZBEventHandler";
 
 const nullArr: never[] = [];
 
 export function applyDescription(
   description: ZBElementArguments,
   element: Element,
+  contexts: ContextComposer,
 ): Lifecycle {
   const uninstallers = [
     ...(description.props
@@ -47,7 +48,7 @@ export function applyDescription(
           .map((source) => applyAnimation(element, source))
       : nullArr),
     ...(description.children
-      ? [applyChildren(element, description.children)]
+      ? [applyChildren(element, description.children, contexts)]
       : nullArr),
   ].filter((uninstaller) => uninstaller != null);
 

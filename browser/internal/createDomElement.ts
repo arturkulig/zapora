@@ -1,5 +1,8 @@
-import type { ZBElement } from "../publicTypes";
-import { ElementNamespace, namespacesFull } from "./ElementNamespaces";
+import {
+  ElementNamespace,
+  namespacesFull,
+} from "../internal/ElementNamespaces";
+import type { ZBElement } from "../public/types";
 
 export function createDomElement(description: ZBElement): Element {
   const element =

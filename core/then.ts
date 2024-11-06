@@ -1,4 +1,4 @@
-import type { ReceivedReceit } from "../Observer";
+import { ReceivedReceit } from "./Observer";
 
 export function then(
   receit: ReceivedReceit,

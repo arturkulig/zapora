@@ -1,6 +1,6 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { SimpleSubscription } from "./SimpleSubscription";
+import { then } from "./then";
 
 export function ofIterable<T>(iterable: Iterable<T>) {
   return new Observable<T>((observer) => {

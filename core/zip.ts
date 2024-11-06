@@ -1,6 +1,6 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { Subscribable } from "./Subscribable";
+import { then } from "./then";
 import { TidySubscription } from "./TidySubscription";
 
 type SourcesToZip<T extends any[]> = Array<Subscribable<T[number]>> & {

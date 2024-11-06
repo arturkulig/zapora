@@ -1,6 +1,6 @@
 import { getQueueingObserver } from "@zapora/core";
-import type { Uninstaller } from "./Uninstaller";
-import type { ZBEventHandler } from "./ZBEventHandler";
+import { ZBEventHandler } from "../public";
+import { Uninstaller } from "./applicator";
 
 export function applyEventHandler(
   element: Element,

@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom } from "@zapora/core";
-import { html } from "../element";
+import { ZBChildList, ZBChildren, html, render } from "../index";
 import { CONFIG } from "../internal/config";
-import { ZBChildList, ZBChildren } from "../publicTypes";
-import { render } from "../render";
 
 describe("renders children", () => {
   let root: HTMLDivElement;

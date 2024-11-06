@@ -1,5 +1,5 @@
-import { then } from "./internal/then";
 import { Observer, ReceivedReceit } from "./Observer";
+import { then } from "./then";
 
 type ValueMessage<T> = { done: false; value: T };
 type CompleteMessage = { done: true };

@@ -1,5 +1,5 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
+import { then } from "./then";
 import { TidySubscription } from "./TidySubscription";
 
 export function interval(periodMs: number) {

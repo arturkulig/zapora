@@ -1,10 +1,12 @@
-import { ChildKey } from "./internal/children/ChildKey";
-import { ZB_NS, ZB_TAG_COMPONENT } from "./internal/children/fragmentSymbols";
+import { ChildKey } from "../internal/ChildKey";
+import { ContextResolver } from "../internal/ContextResolver";
+import { ZB_NS, ZB_TAG_COMPONENT } from "../internal/fragmentSymbols";
 import {
+  ZBChildren,
   ZBComponentElement,
   ZBComponentRender,
   ZBStateArchetype,
-} from "./publicTypes";
+} from "./types";
 
 export function stateful<PROPS, STATE extends ZBStateArchetype>(
   defaultStateValues: (props: PROPS) => STATE,
@@ -22,10 +24,14 @@ export function stateful<PROPS, STATE extends ZBStateArchetype>(
   };
 }
 
-export function stateless<PROPS>(
-  render: ZBComponentRender<PROPS, Record<string, any>>,
-) {
-  return makeComponentFactory<PROPS, Record<string, any>>(render);
+export interface ZBStatelessComponentRender<PROPS = any> {
+  (props: PROPS, context: ContextResolver): ZBChildren;
+}
+
+export function stateless<PROPS>(render: ZBStatelessComponentRender<PROPS>) {
+  return makeComponentFactory<PROPS, Record<string, any>>(
+    (props, _, contextResolver) => render(props, contextResolver),
+  );
 }
 
 export type Component<PROPS> = {

@@ -1,12 +1,13 @@
-import { ZBElement } from "../../publicTypes";
-import { applyDescription } from "../applyDescription";
-import { createDomElement } from "../createDomElement";
-import { ElementNamespace, namespacesFull } from "../ElementNamespaces";
-import { Lifecycle } from "../Lifecycle";
+import { ZBElement } from "../public/types";
+import { applyDescription } from "./applyDescription";
 import { ChildNodesBuffer } from "./ChildNodesBuffer";
+import { createDomElement } from "./createDomElement";
+import { ElementNamespace, namespacesFull } from "./ElementNamespaces";
+import { Lifecycle } from "./Lifecycle";
 import {
-  FinalChild,
   isSamePath,
+  ZBFinalElementTag,
+  ZBPathedFinalChild,
   ZBPathedFinalChildren,
   ZonePath,
 } from "./ZonePath";
@@ -27,7 +28,7 @@ export function readyChildrenBuffer(
     // or one at the same position, but only if both don't have keys
     const leftNode = findOfKey(keyMap, parent, pathedChild.path);
 
-    const rightNode = establishNode(lifecycles, pathedChild.item, leftNode);
+    const rightNode = establishNode(lifecycles, pathedChild, leftNode);
 
     keyMap.set(rightNode, pathedChild.path);
 
@@ -43,30 +44,38 @@ export function readyChildrenBuffer(
 
 function establishNode(
   lifecycles: WeakMap<Node, Lifecycle>,
-  desc: FinalChild,
+  rightSide: ZBPathedFinalChild,
   leftNode?: Node,
 ) {
-  if (typeof desc === "string") {
-    const right =
-      leftNode && isSameTextNode(leftNode, desc)
-        ? leftNode
-        : document.createTextNode(desc);
+  switch (rightSide.type) {
+    case ZBFinalElementTag.string: {
+      const rightNode =
+        leftNode && isSameTextNode(leftNode, rightSide.desc)
+          ? leftNode
+          : document.createTextNode(rightSide.desc);
 
-    return right;
-  } else {
-    const right =
-      leftNode && isSameElement(leftNode, desc)
-        ? leftNode
-        : createDomElement(desc);
-
-    if (leftNode === right) {
-      lifecycles.get(leftNode)?.uninstallApplicators();
+      return rightNode;
     }
 
-    const life = applyDescription(desc, right);
-    lifecycles.set(right, life);
+    case ZBFinalElementTag.element: {
+      const rightNode =
+        leftNode && isSameElement(leftNode, rightSide.desc)
+          ? leftNode
+          : createDomElement(rightSide.desc);
 
-    return right;
+      if (leftNode === rightNode) {
+        lifecycles.get(leftNode)?.uninstallApplicators();
+      }
+
+      const life = applyDescription(
+        rightSide.desc,
+        rightNode,
+        rightSide.contexts,
+      );
+      lifecycles.set(rightNode, life);
+
+      return rightNode;
+    }
   }
 }
 

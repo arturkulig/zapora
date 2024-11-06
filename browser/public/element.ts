@@ -2,8 +2,8 @@ import {
   ElementNamespace,
   ElementTagNames,
   NamespaceToElementRepository,
-} from "./internal/ElementNamespaces";
-import { ZBElement, ZBElementArguments } from "./publicTypes";
+} from "../internal/ElementNamespaces";
+import { ZBElement, ZBElementArguments } from "./types";
 
 const spaces = new Proxy(
   {},

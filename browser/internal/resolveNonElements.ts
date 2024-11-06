@@ -1,10 +1,17 @@
 import { Atom } from "@zapora/core";
-import { ZBChild, ZBChildren } from "../../publicTypes";
+import { ZBChild, ZBChildren } from "../public/types";
 import { ChildKey } from "./ChildKey";
-import { ZB_NS, ZB_TAG_COMPONENT, ZB_TAG_FRAGMENT } from "./fragmentSymbols";
+import { ContextComposer } from "./ContextComposer";
+import {
+  ZB_NS,
+  ZB_TAG_COMPONENT,
+  ZB_TAG_CONTEXT,
+  ZB_TAG_FRAGMENT,
+} from "./fragmentSymbols";
 import { mapValues } from "./mapValues";
 import {
   isSamePath,
+  ZBFinalElementTag,
   ZBPathedFinalChildren,
   ZoneOrigin,
   ZonePath,
@@ -19,44 +26,67 @@ export function resolveNonElements(
   children: ZBChildren,
   path: ZonePath,
   localStates: ComponentStateEntry[],
+  contexts: ContextComposer,
   result: ZBPathedFinalChildren,
 ) {
   if (Array.isArray(children)) {
     for (let index = 0; index < children.length; index++) {
-      resolveNonElement(children[index], index, path, localStates, result);
+      resolveNonElement(
+        children[index],
+        index,
+        path,
+        localStates,
+        contexts,
+        result,
+      );
     }
   } else {
-    resolveNonElement(children, 0, path, localStates, result);
+    resolveNonElement(children, 0, path, localStates, contexts, result);
   }
 }
 
 function resolveNonElement(
   child: ZBChild,
   index: number,
-  path: ZonePath,
+  parentPath: ZonePath,
   localStates: ComponentStateEntry[],
+  contexts: ContextComposer,
   result: ZBPathedFinalChildren,
 ) {
   if (typeof child === "string") {
     result.push({
+      type: ZBFinalElementTag.string,
       path: [{ origin: null, position: index }],
-      item: child,
+      desc: child,
     });
+    return;
+  }
+  if (child.namespace === ZB_NS && child.tag === ZB_TAG_CONTEXT) {
+    resolveNonElements(
+      child.children,
+      parentPath,
+      localStates,
+      contexts.fork(child.id, child.instance),
+      result,
+    );
     return;
   }
 
   if (child.namespace === ZB_NS && child.tag === ZB_TAG_FRAGMENT) {
-    if (child.children.length) {
-      const fragmentZonePath = [...path, makeZone(true, index, child.key)];
-
-      resolveNonElements(child.children, fragmentZonePath, localStates, result);
-    }
+    const fragmentZonePath = [...parentPath, makeZone(true, index, child.key)];
+    resolveNonElements(
+      child.children,
+      fragmentZonePath,
+      localStates,
+      contexts,
+      result,
+    );
     return;
   }
 
   if (child.namespace === ZB_NS && child.tag === ZB_TAG_COMPONENT) {
     const componentPath = [
-      ...path,
+      ...parentPath,
       makeZone(child.component, index, child.key),
     ];
     const componentState = selectLocalState(
@@ -68,28 +98,24 @@ function resolveNonElement(
     const componentUnresolvedChildren = child.component(
       child.props,
       componentState,
+      contexts.resolver,
     );
 
-    Array.isArray(componentUnresolvedChildren)
-      ? resolveNonElements(
-          componentUnresolvedChildren,
-          componentPath,
-          localStates,
-          result,
-        )
-      : resolveNonElement(
-          componentUnresolvedChildren,
-          0,
-          componentPath,
-          localStates,
-          result,
-        );
+    resolveNonElements(
+      componentUnresolvedChildren,
+      componentPath,
+      localStates,
+      contexts,
+      result,
+    );
     return;
   }
 
   result.push({
-    item: child,
-    path: [...path, makeZone(null, index, child.key)],
+    type: ZBFinalElementTag.element,
+    desc: child,
+    path: [...parentPath, makeZone(null, index, child.key)],
+    contexts,
   });
 }
 

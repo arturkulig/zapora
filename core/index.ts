@@ -1,3 +1,4 @@
+// autoindex
 export * from "./Atom";
 export * from "./BroadcastObserver";
 export * from "./combineLatest";
@@ -6,8 +7,6 @@ export * from "./concatAll";
 export * from "./delay";
 export * from "./distinct";
 export * from "./filter";
-export * from "./index";
-export * from "./internal/ArrayOrIterable";
 export * from "./interval";
 export * from "./map";
 export * from "./merge";
@@ -28,6 +27,7 @@ export * from "./Subscription";
 export * from "./switchMap";
 export * from "./take";
 export * from "./takeLast";
+export * from "./then";
 export * from "./TidySubscription";
 export * from "./withLatestFrom";
 export * from "./zip";

@@ -1,8 +1,8 @@
-import { ZB_NS, ZB_TAG_FRAGMENT } from "./internal/children/fragmentSymbols";
-import { ZBChildList, ZBFragment } from "./publicTypes";
+import { ZB_NS, ZB_TAG_FRAGMENT } from "../internal/fragmentSymbols";
+import { ZBChildren, ZBFragment } from "./types";
 
 function fragmentWithKey(key: TemplateStringsArray) {
-  return (children: ZBChildList): ZBFragment => ({
+  return (children: ZBChildren): ZBFragment => ({
     namespace: ZB_NS,
     tag: ZB_TAG_FRAGMENT,
     key: key.join(""),
@@ -10,7 +10,7 @@ function fragmentWithKey(key: TemplateStringsArray) {
   });
 }
 
-function fragmentWoKey(children: ZBChildList): ZBFragment {
+function fragmentWoKey(children: ZBChildren): ZBFragment {
   return {
     namespace: ZB_NS,
     tag: ZB_TAG_FRAGMENT,

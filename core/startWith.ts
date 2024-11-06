@@ -1,7 +1,7 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { Subscribable } from "./Subscribable";
 import { Subscription } from "./Subscription";
+import { then } from "./then";
 
 export function startWith<T>(source: Subscribable<T>, first: T): Observable<T> {
   return new Observable<T>((observer) => {

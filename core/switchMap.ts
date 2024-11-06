@@ -1,9 +1,9 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { ReceivedReceit } from "./Observer";
 import { SimpleSubscription } from "./SimpleSubscription";
 import { Subscribable } from "./Subscribable";
 import { Subscription } from "./Subscription";
+import { then } from "./then";
 import { TidySubscription } from "./TidySubscription";
 
 export function switchMap<T, U>(

@@ -1,16 +1,18 @@
-import { ZBChildren } from "../../publicTypes";
-import { applicator } from "../applicator";
-import { applyDescription } from "../applyDescription";
-import { createDomElement } from "../createDomElement";
-import { Lifecycle } from "../Lifecycle";
-import { StreamMaybe } from "../StreamMaybe";
+import { ZBChildren } from "../public/types";
+import { applicator } from "./applicator";
+import { applyDescription } from "./applyDescription";
+import { ContextComposer } from "./ContextComposer";
+import { createDomElement } from "./createDomElement";
+import { Lifecycle } from "./Lifecycle";
 import { readyChildrenBuffer } from "./readyChildrenBuffer";
 import { ComponentStateEntry, resolveNonElements } from "./resolveNonElements";
-import { ZBPathedFinalChildren, ZonePath } from "./ZonePath";
+import { StreamMaybe } from "./StreamMaybe";
+import { ZBFinalElementTag, ZBPathedFinalChildren, ZonePath } from "./ZonePath";
 
 export function applyChildren(
   parent: Element,
   source: StreamMaybe<ZBChildren>,
+  contexts: ContextComposer,
 ) {
   const lifecycles = new WeakMap<Node, Lifecycle>();
   const keyMap = new WeakMap<Node, ZonePath>();
@@ -38,18 +40,28 @@ export function applyChildren(
     // apply state
     (parent: Element, rightChildDescList) => {
       const resolvedRight: ZBPathedFinalChildren = [];
-      resolveNonElements(rightChildDescList, [], localStates, resolvedRight);
+      resolveNonElements(
+        rightChildDescList,
+        [],
+        localStates,
+        contexts,
+        resolvedRight,
+      );
 
       for (const rightChildDesc of resolvedRight) {
         let added: Node;
-        if (typeof rightChildDesc.item === "string") {
-          const child = document.createTextNode(rightChildDesc.item);
+        if (rightChildDesc.type === ZBFinalElementTag.string) {
+          const child = document.createTextNode(rightChildDesc.desc);
           added = child;
           parent.append(child);
         } else {
-          const child = createDomElement(rightChildDesc.item);
+          const child = createDomElement(rightChildDesc.desc);
           added = child;
-          const lifecycle = applyDescription(rightChildDesc.item, child);
+          const lifecycle = applyDescription(
+            rightChildDesc.desc,
+            child,
+            rightChildDesc.contexts,
+          );
           lifecycles.set(child, lifecycle);
           parent.appendChild(child);
           lifecycle.pushRefMounted();
@@ -60,7 +72,13 @@ export function applyChildren(
     // apply streamed
     (parent: Element, rightChildDescList) => {
       const resolvedRight: ZBPathedFinalChildren = [];
-      resolveNonElements(rightChildDescList, [], localStates, resolvedRight);
+      resolveNonElements(
+        rightChildDescList,
+        [],
+        localStates,
+        contexts,
+        resolvedRight,
+      );
 
       // formulate the future state of children
       const buffer = readyChildrenBuffer(

@@ -1,8 +1,8 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { getQueueingObserver } from "./queueingObserver";
 import { State } from "./State";
 import { Subscribable } from "./Subscribable";
+import { then } from "./then";
 import { TidySubscription } from "./TidySubscription";
 
 type SourcesToCombine<T extends any[]> = Array<Subscribable<T[number]>> & {

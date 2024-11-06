@@ -1,7 +1,7 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { SimpleSubscription } from "./SimpleSubscription";
 import { Subscribable } from "./Subscribable";
+import { then } from "./then";
 
 export function take<T>(
   source: Subscribable<T>,

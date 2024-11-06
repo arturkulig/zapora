@@ -1,9 +1,9 @@
 import { noop } from "./internal/noop";
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { State } from "./State";
 import { Subscribable } from "./Subscribable";
 import { Subscription } from "./Subscription";
+import { then } from "./then";
 import { TidySubscription } from "./TidySubscription";
 
 type SourcesToCombine<T extends any[]> = Array<Subscribable<T[number]>> & {

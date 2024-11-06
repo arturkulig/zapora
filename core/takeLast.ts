@@ -1,8 +1,8 @@
-import { then } from "./internal/then";
 import { Observable } from "./Observable";
 import { ReceivedReceit } from "./Observer";
 import { SimpleSubscription } from "./SimpleSubscription";
 import { Subscribable } from "./Subscribable";
+import { then } from "./then";
 
 export function takeLast<T>(
   source: Subscribable<T>,

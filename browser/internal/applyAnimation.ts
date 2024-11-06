@@ -1,3 +1,4 @@
+import { ReceivedReceit, then } from "@zapora/core";
 import { applicator } from "./applicator";
 import { StreamMaybe } from "./StreamMaybe";
 
@@ -11,7 +12,8 @@ export function applyAnimation(
   element: any,
   source: StreamMaybe<AnimationMessage>,
 ) {
-  let lastFrame: Keyframe = {};
+  let lastFrame: Keyframe | null = null;
+  let lastFinished: ReceivedReceit = Promise.resolve();
 
   return applicator<AnimationMessage>(
     element,
@@ -41,11 +43,33 @@ export function applyAnimation(
         easing: value.easing ?? "linear",
         offset: 1,
       };
-      (element as Element).animate([nextFrame], {
-        fill: "forwards",
-        duration: 0,
-      });
-      lastFrame = nextFrame;
+
+      let doesNextFrameDiffer = false;
+      if (lastFrame == null) {
+        doesNextFrameDiffer = true;
+      } else {
+        for (const propName of new Set([
+          ...Object.keys(lastFrame),
+          ...Object.keys(nextFrame),
+        ])) {
+          if (lastFrame[propName] !== nextFrame[propName]) {
+            doesNextFrameDiffer = true;
+            break;
+          }
+        }
+      }
+
+      if (doesNextFrameDiffer) {
+        lastFrame = nextFrame;
+        lastFinished = then(
+          getAllActiveAnimations(element).length > 0 ? lastFinished : undefined,
+          () =>
+            (element as Element).animate([nextFrame], {
+              fill: "forwards",
+              duration: 0,
+            }).finished,
+        );
+      }
     },
     (element, value) => {
       const nextFrame: Keyframe = {
@@ -53,13 +77,23 @@ export function applyAnimation(
         easing: value.easing ?? "linear",
         offset: 1,
       };
-      const animation = (element as Element).animate([lastFrame, nextFrame], {
-        fill: "forwards",
-        duration: value.timing,
-      });
-      return animation.finished.then(noop);
+
+      lastFinished = then(
+        getAllActiveAnimations(element).length > 0 ? lastFinished : undefined,
+        () =>
+          (element as Element).animate([lastFrame ?? {}, nextFrame], {
+            fill: "forwards",
+            duration: value.timing,
+          }).finished,
+      );
     },
   );
 }
 
-function noop() {}
+function getAllActiveAnimations(element: Element) {
+  return element.getAnimations().filter(isAnimationActive);
+}
+
+function isAnimationActive(animation: Animation) {
+  return !animation.finished;
+}

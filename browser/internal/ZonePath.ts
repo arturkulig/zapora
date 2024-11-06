@@ -1,14 +1,26 @@
-import type { ZBComponentRender, ZBElement } from "../../publicTypes";
+import { ZBComponentRender, ZBElement } from "../public/types";
 import type { ChildKey } from "./ChildKey";
+import { ContextComposer } from "./ContextComposer";
 
 export type ZBPathedFinalChildren = ZBPathedFinalChild[];
 
-export interface ZBPathedFinalChild {
-  path: ZonePath;
-  item: FinalChild;
+export enum ZBFinalElementTag {
+  element,
+  string,
 }
 
-export type FinalChild = ZBElement | string;
+export type ZBPathedFinalChild =
+  | {
+      type: ZBFinalElementTag.element;
+      path: ZonePath;
+      contexts: ContextComposer;
+      desc: ZBElement;
+    }
+  | {
+      type: ZBFinalElementTag.string;
+      path: ZonePath;
+      desc: string;
+    };
 
 export type ZonePath = Zone[];
 

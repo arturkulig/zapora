@@ -1,26 +1,39 @@
-import { glob, open } from "node:fs/promises";
+import { glob, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname } from "node:path";
+
+const INTENDED_TOKEN = "// autoindex";
 
 for await (const index of glob("./**/index.ts")) {
   if (index.match(/^node_modules/) != null) {
     continue;
   }
 
-  const fh = await open(index, "w");
+  const [indexFirstLine] = (await readFile(index, { encoding: "utf-8" })).split(
+    "\n",
+  );
+
+  if (!indexFirstLine.startsWith(INTENDED_TOKEN)) {
+    continue;
+  }
+
+  const newContents = [INTENDED_TOKEN];
 
   for await (const moduleFile of glob(`./*.ts`, {
     cwd: dirname(index),
   })) {
-    if (moduleFile.match(/spec\.ts$/) != null) {
+    if (
+      moduleFile.match(/spec\.ts$/) != null ||
+      moduleFile.match(/^index\.ts$/) != null
+    ) {
       continue;
     }
 
-    await fh.writeFile(`export * from "./${basename(moduleFile, ".ts")}";\n`, {
-      encoding: "utf-8",
-    });
+    newContents.push(`export * from "./${basename(moduleFile, ".ts")}";`);
   }
 
-  await fh.close();
+  await writeFile(index, newContents.join("\r\n"), {
+    encoding: "utf-8",
+  });
 }
 
 await new Promise((r) => setTimeout(r, 100));

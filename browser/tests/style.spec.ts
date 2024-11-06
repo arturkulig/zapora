@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom, Subject } from "@zapora/core";
-import { html } from "../element";
-import { render } from "../render";
+import { html, render } from "../index";
 
 describe("renders styles", () => {
   let root: HTMLDivElement;

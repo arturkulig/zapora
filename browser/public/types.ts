@@ -1,19 +1,33 @@
 import type { Atom, Observer } from "@zapora/core";
-import type { AnimationMessage } from "./internal/applyAnimation";
-import type { ChildKey } from "./internal/children/ChildKey";
-import type {
+import type { AnimationMessage } from "../internal/applyAnimation";
+import { ChildKey } from "../internal/ChildKey";
+import { ContextResolver } from "../internal/ContextResolver";
+import { ElementNamespace } from "../internal/ElementNamespaces";
+import {
   ZB_NS,
   ZB_TAG_COMPONENT,
+  ZB_TAG_CONTEXT,
   ZB_TAG_FRAGMENT,
-} from "./internal/children/fragmentSymbols";
-import type { ElementNamespace } from "./internal/ElementNamespaces";
-import type { ImmutableProperties } from "./internal/ImmutableProperties";
-import type { StreamMaybe } from "./internal/StreamMaybe";
-import type { ZBEventHandler } from "./internal/ZBEventHandler";
+} from "../internal/fragmentSymbols";
+import { ImmutableProperties } from "../internal/ImmutableProperties";
+import { StreamMaybe } from "../internal/StreamMaybe";
 
-export type ZBChild = ZBComponentElement | ZBFragment | ZBElement | string;
+export type ZBChild =
+  | ZBContextElement
+  | ZBComponentElement
+  | ZBFragment
+  | ZBElement
+  | string;
 export type ZBChildList = ZBChild[];
 export type ZBChildren = ZBChild | ZBChildList;
+
+export interface ZBContextElement {
+  namespace: typeof ZB_NS;
+  tag: typeof ZB_TAG_CONTEXT;
+  id: symbol;
+  instance: any;
+  children: ZBChildren;
+}
 
 export interface ZBComponentElement {
   namespace: typeof ZB_NS;
@@ -24,18 +38,22 @@ export interface ZBComponentElement {
   defaultStateValues?: (() => any) | any;
 }
 
-export type ZBFragment = {
+export interface ZBFragment {
   namespace: typeof ZB_NS;
   tag: typeof ZB_TAG_FRAGMENT;
-  children: ZBChildList;
+  children: ZBChildren;
   key?: ChildKey;
-};
+}
 
 export interface ZBComponentRender<
   PROPS = any,
   STATE extends ZBStateArchetype = ZBStateArchetype,
 > {
-  (props: PROPS, states: { [id in keyof STATE]: Atom<STATE[id]> }): ZBChildren;
+  (
+    props: PROPS,
+    states: { [id in keyof STATE]: Atom<STATE[id]> },
+    context: ContextResolver,
+  ): ZBChildren;
 }
 
 export type ZBStateArchetype = Record<string, any>;
@@ -88,3 +106,7 @@ export interface ZBElementArguments<ElementType = any> {
   children?: StreamMaybe<ZBChildren>;
   ref?: Observer<ElementType>;
 }
+
+export type ZBEventHandler<E extends Event> =
+  | ((event: E) => void)
+  | Observer<E>;
