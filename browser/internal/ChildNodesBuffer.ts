@@ -1,5 +1,5 @@
-import { ChildNodeController } from "./ChildNodeController";
-import { ParentNodeController } from "./ParentNodeController";
+import { ChildNodeManipulator } from "./ChildNodeManipulator";
+import { ParentNodeManipulator } from "./ParentNodeManipulator";
 
 type RenderingStrategySegment = {
   closing: ChildNode | null;
@@ -54,7 +54,7 @@ export class ChildNodesBuffer {
     // there are child nodes remaining...
     if (this.parent.childNodes.length === 0) {
       // ...apply all instantly
-      new ParentNodeController(this.parent).replaceChildren(this.nodes);
+      new ParentNodeManipulator(this.parent).replaceChildren(this.nodes);
     } else {
       // swap positions of existing elements
       for (let index = 0; index < this.existingSegments.length; index++) {
@@ -65,9 +65,9 @@ export class ChildNodesBuffer {
       // ...add new in segments
       for (const segment of this.newSegments) {
         if (segment.closing == null) {
-          new ParentNodeController(this.parent).append(segment.nodes);
+          new ParentNodeManipulator(this.parent).append(segment.nodes);
         } else {
-          new ChildNodeController(segment.closing).before(segment.nodes);
+          new ChildNodeManipulator(segment.closing).before(segment.nodes);
         }
       }
     }

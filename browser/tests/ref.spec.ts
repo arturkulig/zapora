@@ -13,9 +13,11 @@ describe("informs of references as render occurs", () => {
     let completeCalled = false;
     let inspected: Element;
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: [
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        [
           html.div({
             ref: {
               next: (element) => {
@@ -30,7 +32,7 @@ describe("informs of references as render occurs", () => {
             },
           }),
         ],
-      }),
+      ),
       root,
     );
 

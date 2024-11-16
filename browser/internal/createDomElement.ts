@@ -1,10 +1,11 @@
 import {
+  AnyElement,
   ElementNamespace,
   namespacesFull,
 } from "../internal/ElementNamespaces";
 import type { ZBElement } from "../public/types";
 
-export function createDomElement(description: ZBElement): Element {
+export function createDomElement(description: ZBElement) {
   const element =
     description.namespace === "html"
       ? document.createElement(description.tag)
@@ -12,5 +13,5 @@ export function createDomElement(description: ZBElement): Element {
           namespacesFull[description.namespace as ElementNamespace],
           description.tag,
         );
-  return element;
+  return element as AnyElement;
 }

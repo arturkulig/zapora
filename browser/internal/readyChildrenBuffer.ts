@@ -59,7 +59,7 @@ function establishNode(
 
     case ZBFinalElementTag.element: {
       const rightNode =
-        leftNode && isSameElement(leftNode, rightSide.desc)
+        leftNode && isSameElementType(leftNode, rightSide.desc)
           ? leftNode
           : createDomElement(rightSide.desc);
 
@@ -107,7 +107,7 @@ function isTextNode(node: Node): node is Text {
   return node && node.nodeType === node.TEXT_NODE;
 }
 
-function isSameElement(node: Node, desc: ZBElement): node is Element {
+function isSameElementType(node: Node, desc: ZBElement): node is Element {
   return (
     node instanceof Element &&
     node.namespaceURI === namespacesFull[desc.namespace as ElementNamespace] &&

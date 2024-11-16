@@ -10,13 +10,7 @@ describe("renders text nodes", () => {
 
   it("as children", () => {
     const destroy = render(
-      html.div({
-        children: [
-          html.p({ children: ["123"] }),
-          "456",
-          html.a({ children: ["789"] }),
-        ],
-      }),
+      html.div({}, [html.p({}, ["123"]), "456", html.a({}, ["789"])]),
       root,
     );
 
@@ -29,25 +23,20 @@ describe("renders text nodes", () => {
   it("recomputes text content", async () => {
     const children$ = new Atom<ZBChildList>([
       "n:",
-      html.p({ children: ["123"] }),
+      html.p({}, ["123"]),
       "456",
-      html.a({ children: ["789"] }),
+      html.a({}, ["789"]),
     ]);
 
-    const destroy = render(
-      html.div({
-        children: children$,
-      }),
-      root,
-    );
+    const destroy = render(html.div({}, children$), root);
 
     await children$.next([
       "n:",
-      html.p({ children: ["987"] }),
+      html.p({}, ["987"]),
       "6",
       "5",
       "4",
-      html.a({ children: ["321"] }),
+      html.a({}, ["321"]),
     ]);
 
     expect(root.childNodes[0].childNodes.length).toBe(6);

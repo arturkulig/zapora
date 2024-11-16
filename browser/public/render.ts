@@ -1,17 +1,13 @@
-import { applyDescription } from "../internal/applyDescription";
+import { Uninstaller } from "../internal/applicator";
 import { ContextComposer } from "../internal/ContextComposer";
-import { createDomElement } from "../internal/createDomElement";
-import { ZBElement } from "./types";
+import { ElementController } from "../internal/ElementController";
+import { ZBChild } from "./types";
 
-export function render(element: ZBElement, root: HTMLElement) {
-  const appNode = createDomElement(element);
-  const appLife = applyDescription(element, appNode, new ContextComposer());
-  root.appendChild(appNode);
-  appLife.pushRefMounted();
-
+export function render(element: ZBChild, root: HTMLElement): Uninstaller {
+  const emptyContext = new ContextComposer();
+  const rootController = new ElementController(root);
+  rootController.applyDescription({ children: element }, emptyContext);
   return () => {
-    root.removeChild(appNode);
-    appLife.uninstallApplicators();
-    appLife.pushUnmounted();
+    rootController.unmounted();
   };
 }

@@ -1,4 +1,5 @@
 import type { Atom, Observer } from "@zapora/core";
+import { Properties as CSSProperties } from "csstype";
 import type { AnimationMessage } from "../internal/applyAnimation";
 import { ChildKey } from "../internal/ChildKey";
 import { ContextResolver } from "../internal/ContextResolver";
@@ -58,55 +59,74 @@ export interface ZBComponentRender<
 
 export type ZBStateArchetype = Record<string, any>;
 
-export interface ZBElement<ElementType = any>
-  extends ZBElementArguments<ElementType> {
+export interface ZBElement<
+  ElementType = any,
+  EventMap extends AnyEventMap = AnyEventMap,
+> extends ZBElementAllArguments<ElementType, EventMap> {
   namespace: ElementNamespace;
   tag: string;
   key?: ChildKey;
 }
 
-export interface ZBElementArguments<ElementType = any> {
+export type AnyEventMap =
+  | HTMLElementEventMap
+  | SVGElementEventMap
+  | MathMLElementEventMap;
+
+export interface ZBElementAllArguments<
+  ElementType = any,
+  EventMap extends AnyEventMap = AnyEventMap,
+> extends ZBElementDirectArguments<ElementType, EventMap> {
+  children?: StreamMaybe<ZBChildren>;
+}
+
+export type ZBElementPropNames<ElementType> = Extract<
+  Exclude<keyof ElementType, ImmutableProperties>,
+  string
+>;
+
+export interface ZBElementDirectArguments<
+  ElementType = any,
+  EventMap extends AnyEventMap = AnyEventMap,
+> {
+  className?: StreamMaybe<string>;
   props?: {
-    [id in Extract<
-      Exclude<keyof ElementType, ImmutableProperties>,
-      string
-    >]?: StreamMaybe<ElementType[id]>;
+    [id in ZBElementPropNames<ElementType>]?: StreamMaybe<ElementType[id]>;
   };
   style?: {
-    [id in keyof CSSStyleDeclaration]?: StreamMaybe<CSSStyleDeclaration[id]>;
+    [id in keyof CSSProperties]?: StreamMaybe<CSSProperties[id]>;
   };
   animate?: AnimationMessage | AnimationMessage[];
   on?: {
-    [id in keyof HTMLElementEventMap]?: ZBEventHandler<HTMLElementEventMap[id]>;
+    [id in StringOnlyKeys<EventMap>]?: ZBEventHandler<EventMap[id]>;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:passive`]?: ZBEventHandler<
-      HTMLElementEventMap[id]
+    [id in StringOnlyKeys<EventMap> as `${id}:passive`]?: ZBEventHandler<
+      EventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:passive:capture`]?: ZBEventHandler<
-      HTMLElementEventMap[id]
+    [id in StringOnlyKeys<EventMap> as `${id}:passive:capture`]?: ZBEventHandler<
+      EventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:passive:capture:once`]?: ZBEventHandler<
-      HTMLElementEventMap[id]
+    [id in StringOnlyKeys<EventMap> as `${id}:passive:capture:once`]?: ZBEventHandler<
+      EventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:capture`]?: ZBEventHandler<
-      HTMLElementEventMap[id]
+    [id in StringOnlyKeys<EventMap> as `${id}:capture`]?: ZBEventHandler<
+      EventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:capture:once`]?: ZBEventHandler<
-      HTMLElementEventMap[id]
+    [id in StringOnlyKeys<EventMap> as `${id}:capture:once`]?: ZBEventHandler<
+      EventMap[id]
     >;
   } & {
-    [id in keyof HTMLElementEventMap as `${id}:once`]?: ZBEventHandler<
-      HTMLElementEventMap[id]
+    [id in StringOnlyKeys<EventMap> as `${id}:once`]?: ZBEventHandler<
+      EventMap[id]
     >;
   };
-  children?: StreamMaybe<ZBChildren>;
   ref?: Observer<ElementType>;
 }
 
-export type ZBEventHandler<E extends Event> =
-  | ((event: E) => void)
-  | Observer<E>;
+export type ZBEventHandler<E = Event> = ((event: E) => void) | Observer<E>;
+
+type StringOnlyKeys<T> = Extract<keyof T, string>;

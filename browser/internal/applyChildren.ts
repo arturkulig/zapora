@@ -33,7 +33,7 @@ export function applyChildren(
         const life = lifecycles.get(child);
         if (life) {
           life.uninstallApplicators();
-          life.pushUnmounted();
+          life.pushRefUnmounted();
         }
       }
     },
@@ -98,7 +98,7 @@ export function applyChildren(
         const life = lifecycles.get(node);
         if (life) {
           life.uninstallApplicators();
-          life.pushUnmounted();
+          life.pushRefUnmounted();
         }
       }
 

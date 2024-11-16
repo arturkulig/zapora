@@ -1,9 +1,10 @@
 import { ReceivedReceit, then } from "@zapora/core";
+import { Properties as CSSProperties } from "csstype";
 import { applicator } from "./applicator";
 import { StreamMaybe } from "./StreamMaybe";
 
 export interface AnimationMessage {
-  style: CSSStyleDeclaration;
+  style: CSSProperties;
   easing?: string;
   timing: number;
 }

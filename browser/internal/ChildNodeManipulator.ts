@@ -1,6 +1,6 @@
 import { CONFIG } from "./config";
 
-export class ChildNodeController {
+export class ChildNodeManipulator {
   constructor(private element: ChildNode) {}
 
   before(nodes: (Node | string)[]) {

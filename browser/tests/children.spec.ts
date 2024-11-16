@@ -11,10 +11,12 @@ describe("renders children", () => {
 
   it("applied and removed", () => {
     const destroy = render(
-      html.base({
-        props: { id: "testId" },
-        children: [html.div()],
-      }),
+      html.base(
+        {
+          props: { id: "testId" },
+        },
+        [html.div()],
+      ),
       root,
     );
 
@@ -33,10 +35,12 @@ describe("renders children", () => {
       html.a(),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -83,10 +87,12 @@ describe("renders children", () => {
       html.a(),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -130,10 +136,12 @@ describe("renders children", () => {
       html.div.key`C`({ props: { id: "C" } }),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -169,10 +177,12 @@ describe("renders children", () => {
         Array.from(new Array(intendedLength), () => html.div()),
       );
       const destroy = render(
-        html.base({
-          props: { id: "testId" },
-          children: children$,
-        }),
+        html.base(
+          {
+            props: { id: "testId" },
+          },
+          children$,
+        ),
         root,
       );
 
