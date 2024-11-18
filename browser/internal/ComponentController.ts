@@ -5,25 +5,52 @@ export abstract class ComponentController<ELEMENT, VALUE> {
   constructor(protected element: ELEMENT) {}
 
   protected abstract deinitialize(): void;
-  protected abstract applyValue(value: VALUE): void;
+  protected abstract applyValue(value: VALUE | undefined): void;
 
   private currentValue: { applied: VALUE } | undefined = undefined;
+
+  applyUnit(source: VALUE | undefined): void {
+    // console.log(
+    //   "CONSIDER",
+    //   this.currentValue?.applied !== source,
+    //   ": ",
+    //   source,
+    // );
+    if (source == null) {
+      this.currentValue = undefined;
+      this.applyValue(undefined);
+    } else if (!this.currentValue) {
+      this.currentValue = { applied: source };
+      this.applyValue(source);
+    } else if (this.currentValue.applied !== source) {
+      this.currentValue.applied = source;
+      this.applyValue(source);
+    }
+  }
+
+  destroy(): void {
+    this.deinitialize();
+  }
+}
+
+export abstract class StreamedComponentController<
+  ELEMENT,
+  VALUE,
+> extends ComponentController<ELEMENT, VALUE> {
   private currentSource: StreamMaybe<VALUE> | undefined = undefined;
   private currentSourceSubscription: Subscription | undefined = undefined;
 
   applySource(source: StreamMaybe<VALUE> | undefined): void {
+    // console.log("SOURCE", source);
     if (source === this.currentSource) {
       return;
     }
 
+    this.unsubscribeFromSource();
+
     this.currentSource = source;
 
-    if (source == null) {
-      this.unsubscribeFromSource();
-      return;
-    }
-
-    if (isSubscribable<VALUE>(source)) {
+    if (source != null && isSubscribable<VALUE>(source)) {
       this.applyStream(source);
     } else {
       this.applyUnit(source);
@@ -32,7 +59,7 @@ export abstract class ComponentController<ELEMENT, VALUE> {
 
   destroy(): void {
     this.unsubscribeFromSource();
-    this.deinitialize();
+    super.destroy();
   }
 
   private unsubscribeFromSource(): void {
@@ -44,39 +71,26 @@ export abstract class ComponentController<ELEMENT, VALUE> {
     }
   }
 
-  private applyUnit(source: VALUE): void {
-    this.considerValue(source);
-  }
-
   private applyStream(source: Subscribable<VALUE>) {
     let destroyed = false;
     let completed = false;
 
     if (source instanceof State) {
-      this.considerValue(source.value);
+      this.applyUnit(source.value);
     }
 
     this.currentSourceSubscription = source.subscribe({
       get closed() {
         return destroyed || completed;
       },
-      next: (value) => this.considerValue(value),
+      next: (value) => this.applyUnit(value),
       complete: () => {
         if (!completed) {
           completed = true;
+          return this.applyUnit(undefined);
         }
       },
     });
-  }
-
-  private considerValue(value: VALUE) {
-    if (!this.currentValue) {
-      this.currentValue = { applied: value };
-      this.applyValue(value);
-    } else if (this.currentValue !== value) {
-      this.currentValue.applied = value;
-      this.applyValue(value);
-    }
   }
 }
 

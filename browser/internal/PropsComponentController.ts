@@ -1,10 +1,10 @@
-import { ComponentController } from "./ComponentController";
+import { StreamedComponentController } from "./ComponentController";
 import { ImmutableProperties } from "./ImmutableProperties";
 
-export class PropsController<
+export class PropsComponentController<
   ELEMENT extends Element,
   PROP extends Exclude<keyof ELEMENT, ImmutableProperties>,
-> extends ComponentController<ELEMENT, ELEMENT[PROP]> {
+> extends StreamedComponentController<ELEMENT, ELEMENT[PROP]> {
   private initial: ELEMENT[PROP];
 
   constructor(
@@ -15,11 +15,11 @@ export class PropsController<
     this.initial = this.element[key];
   }
 
-  deinitialize(): void {
+  protected deinitialize(): void {
     this.element[this.key] = this.initial;
   }
 
-  applyValue(value: ELEMENT[PROP]): void {
-    this.element[this.key] = value;
+  protected applyValue(value: ELEMENT[PROP] | undefined): void {
+    this.element[this.key] = value ?? this.initial;
   }
 }

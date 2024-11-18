@@ -2,31 +2,32 @@ import { Observer } from "@zapora/core";
 import { Properties as CSSProperties } from "csstype";
 import {
   AnyEventMap,
-  ZBChildren,
   ZBElementAllArguments,
   ZBElementPropNames,
 } from "../public";
 import { ChildrenComponentController } from "./ChildrenComponentController";
 import { ClassNameComponentController } from "./ClassNameComponentController";
-import { ComponentController } from "./ComponentController";
+import { StreamedComponentController } from "./ComponentController";
 import { ContextComposer } from "./ContextComposer";
 import { AnyElement } from "./ElementNamespaces";
 import { EventComponentController } from "./EventComponentController";
 import { ImmutableProperties } from "./ImmutableProperties";
-import { PropsController } from "./PropsController";
+import { PropsComponentController } from "./PropsComponentController";
 import { StyleComponentController } from "./StyleComponentController";
 
 type CSSPropertiesNames = keyof CSSProperties;
 
-interface ElementComponentsControllers<ELEMENT> {
-  className?: ComponentController<ELEMENT, any>;
+interface ElementComponentsControllers<ELEMENT extends AnyElement> {
+  className?: ClassNameComponentController<ELEMENT>;
   props: Partial<
-    Record<ZBElementPropNames<ELEMENT>, ComponentController<ELEMENT, any>>
+    Record<ZBElementPropNames<ELEMENT>, PropsComponentController<ELEMENT, any>>
   >;
-  style: Partial<Record<CSSPropertiesNames, ComponentController<ELEMENT, any>>>;
-  animate?: ComponentController<ELEMENT, any>;
-  on: Record<string, ComponentController<ELEMENT, any>>;
-  children?: ComponentController<ELEMENT, ZBChildren>;
+  style: Partial<
+    Record<CSSPropertiesNames, StyleComponentController<ELEMENT, any>>
+  >;
+  animate?: StreamedComponentController<ELEMENT, any>;
+  on: Record<string, EventComponentController<ELEMENT>>;
+  children?: ChildrenComponentController<ELEMENT>;
 }
 
 type EventNames<
@@ -77,12 +78,11 @@ export class ElementController<
       description.className != null ||
       this.presentComponents.className != null
     ) {
-      (
-        futureComponents.className ||
-        (futureComponents.className = new ClassNameComponentController<ELEMENT>(
-          this.element,
-        ))
-      ).applySource(description.className);
+      (futureComponents.className =
+        this.presentComponents.className ||
+        new ClassNameComponentController<ELEMENT>(this.element)).applySource(
+        description.className,
+      );
     }
   }
 
@@ -101,16 +101,15 @@ export class ElementController<
       ...futureNames,
     ]);
     for (const propName of propNames) {
-      (
-        futureComponents.props[propName] ||
-        (futureComponents.props[propName] = new PropsController<
+      (futureComponents.props[propName] =
+        this.presentComponents.props[propName] ||
+        new PropsComponentController<
           ELEMENT,
           Exclude<keyof ELEMENT, ImmutableProperties>
         >(
           this.element,
           propName as Exclude<keyof ELEMENT, ImmutableProperties>,
-        ))
-      ).applySource(description.props?.[propName]);
+        )).applySource(description.props?.[propName]);
     }
   }
 
@@ -129,13 +128,12 @@ export class ElementController<
       ...futureNames,
     ]);
     for (const propName of propNames) {
-      (
-        futureComponents.style[propName] ||
-        (futureComponents.style[propName] = new StyleComponentController<
-          ELEMENT,
-          CSSPropertiesNames
-        >(this.element, propName))
-      ).applySource(description.style?.[propName]);
+      (futureComponents.style[propName] =
+        this.presentComponents.style[propName] ||
+        new StyleComponentController<ELEMENT, CSSPropertiesNames>(
+          this.element,
+          propName,
+        )).applySource(description.style?.[propName]);
     }
   }
 
@@ -155,13 +153,12 @@ export class ElementController<
       ...futureNames,
     ]);
     for (const propName of propNames) {
-      (
-        futureComponents.on[propName] ||
-        (futureComponents.on[propName] = new EventComponentController<ELEMENT>(
+      (futureComponents.on[propName] =
+        this.presentComponents.on[propName] ||
+        new EventComponentController<ELEMENT>(
           this.element,
           propName,
-        ))
-      ).applySource(description.on?.[propName]);
+        )).applyUnit(description.on?.[propName]);
     }
   }
 
@@ -174,13 +171,12 @@ export class ElementController<
       description.children != null ||
       this.presentComponents.children != null
     ) {
-      (
-        futureComponents.children ||
-        (futureComponents.children = new ChildrenComponentController<ELEMENT>(
+      (futureComponents.children =
+        this.presentComponents.children ||
+        new ChildrenComponentController<ELEMENT>(
           this.element,
           contexts,
-        ))
-      ).applySource(description.children);
+        )).applySource(description.children);
     }
   }
 
@@ -197,18 +193,15 @@ export class ElementController<
 
     this.presentComponents.className?.destroy();
     this.presentComponents.animate?.destroy();
-    for (const propName in this.presentComponents.props) {
-      this.presentComponents.props[
-        propName as ZBElementPropNames<ELEMENT>
-      ]?.destroy();
+    for (const component of Object.values(this.presentComponents.props)) {
+      component.destroy();
     }
-    for (const propName in this.presentComponents.style) {
-      this.presentComponents.style[propName as CSSPropertiesNames]?.destroy();
+    for (const component of Object.values(this.presentComponents.style)) {
+      component.destroy();
     }
-    for (const eventName in this.presentComponents.on) {
-      this.presentComponents.on[
-        eventName as EventNames<ELEMENT, EVENTMAP>
-      ]?.destroy();
+    for (const component of Object.values(this.presentComponents.on)) {
+      component.destroy();
     }
+    this.presentComponents.children?.destroy();
   }
 }

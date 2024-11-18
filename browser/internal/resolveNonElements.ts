@@ -25,7 +25,8 @@ export interface ComponentStateEntry {
 export function resolveNonElements(
   children: ZBChildren,
   path: ZonePath,
-  localStates: ComponentStateEntry[],
+  presentStates: ComponentStateEntry[],
+  usedStates: ComponentStateEntry[],
   contexts: ContextComposer,
   result: ZBPathedFinalChildren,
 ) {
@@ -35,13 +36,22 @@ export function resolveNonElements(
         children[index],
         index,
         path,
-        localStates,
+        presentStates,
+        usedStates,
         contexts,
         result,
       );
     }
   } else {
-    resolveNonElement(children, 0, path, localStates, contexts, result);
+    resolveNonElement(
+      children,
+      0,
+      path,
+      presentStates,
+      usedStates,
+      contexts,
+      result,
+    );
   }
 }
 
@@ -49,7 +59,8 @@ function resolveNonElement(
   child: ZBChild,
   index: number,
   parentPath: ZonePath,
-  localStates: ComponentStateEntry[],
+  presentStates: ComponentStateEntry[],
+  usedStates: ComponentStateEntry[],
   contexts: ContextComposer,
   result: ZBPathedFinalChildren,
 ) {
@@ -65,7 +76,8 @@ function resolveNonElement(
     resolveNonElements(
       child.children,
       parentPath,
-      localStates,
+      presentStates,
+      usedStates,
       contexts.fork(child.id, child.instance),
       result,
     );
@@ -77,7 +89,8 @@ function resolveNonElement(
     resolveNonElements(
       child.children,
       fragmentZonePath,
-      localStates,
+      presentStates,
+      usedStates,
       contexts,
       result,
     );
@@ -89,22 +102,27 @@ function resolveNonElement(
       ...parentPath,
       makeZone(child.component, index, child.key),
     ];
-    const componentState = selectLocalState(
-      localStates,
+    const componentStateEntry = selectLocalState(
+      presentStates,
       componentPath,
       child.props,
       child.defaultStateValues,
     );
+    if (componentStateEntry) {
+      usedStates.push(componentStateEntry);
+    }
+
     const componentUnresolvedChildren = child.component(
       child.props,
-      componentState,
+      componentStateEntry?.states ?? {},
       contexts.resolver,
     );
 
     resolveNonElements(
       componentUnresolvedChildren,
       componentPath,
-      localStates,
+      presentStates,
+      usedStates,
       contexts,
       result,
     );
@@ -128,15 +146,15 @@ function selectLocalState<PROPS>(
   componentPath: ZonePath,
   props: PROPS,
   defaultStateValues: Record<string, any> | undefined,
-) {
+): ComponentStateEntry | null {
   for (const entry of localStates) {
     if (isSamePath(entry.path, componentPath)) {
-      return entry.states;
+      return entry;
     }
   }
 
   if (!defaultStateValues) {
-    return {};
+    return null;
   }
 
   const entry: ComponentStateEntry = {
@@ -149,7 +167,5 @@ function selectLocalState<PROPS>(
     ),
   };
 
-  localStates.push(entry);
-
-  return entry.states;
+  return entry;
 }

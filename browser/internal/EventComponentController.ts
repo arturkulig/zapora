@@ -1,4 +1,4 @@
-import { getQueueingObserver, ReceivedReceit } from "@zapora/core";
+import { getQueueingObserver, Observer } from "@zapora/core";
 import { ZBEventHandler } from "../public";
 import { ComponentController } from "./ComponentController";
 
@@ -7,18 +7,23 @@ export class EventComponentController<
 > extends ComponentController<ELEMENT, ZBEventHandler> {
   eventName: string;
   postedListener: (event: Event) => void;
-  userListenerNext: ((event: Event) => ReceivedReceit) | undefined;
-  userListenerComplete: ((event: Event) => ReceivedReceit) | undefined;
+  userListenerNext: Observer<Event> | undefined;
 
   constructor(element: ELEMENT, complexEventName: string) {
     super(element);
 
-    this.postedListener = (event) => {
-      this.userListenerNext?.(event);
-    };
-
     const [eventName, arg0, arg1, arg2] = complexEventName.split(":");
     this.eventName = eventName;
+
+    this.postedListener = (event) => {
+      if (
+        this.userListenerNext &&
+        this.userListenerNext.next &&
+        !this.userListenerNext.closed
+      ) {
+        this.userListenerNext.next(event);
+      }
+    };
 
     const passive = !!(
       arg0 === "passive" ||
@@ -39,19 +44,23 @@ export class EventComponentController<
     });
   }
 
-  deinitialize(): void {
+  protected deinitialize(): void {
     this.element.removeEventListener(this.eventName, this.postedListener);
+    if (
+      this.userListenerNext &&
+      this.userListenerNext.complete &&
+      !this.userListenerNext.closed
+    ) {
+      this.userListenerNext.complete();
+    }
   }
 
-  applyValue(value: ZBEventHandler): void {
-    if (typeof value === "function") {
-      this.userListenerNext = value;
-      this.userListenerComplete = undefined;
-    } else {
-      const cautiousHandler = getQueueingObserver(value);
-      this.userListenerNext = cautiousHandler.next?.bind(cautiousHandler);
-      this.userListenerComplete =
-        cautiousHandler.complete?.bind(cautiousHandler);
-    }
+  protected applyValue(value: ZBEventHandler | undefined): void {
+    this.userListenerNext =
+      typeof value === "function"
+        ? { next: value }
+        : typeof value === "object"
+          ? getQueueingObserver(value)
+          : undefined;
   }
 }

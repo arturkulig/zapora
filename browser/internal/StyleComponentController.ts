@@ -1,11 +1,11 @@
 import { Properties as CSSProperties } from "csstype";
-import { ComponentController } from "./ComponentController";
+import { StreamedComponentController } from "./ComponentController";
 import { AnyElement } from "./ElementNamespaces";
 
 export class StyleComponentController<
   ELEMENT extends AnyElement,
   PROP extends keyof CSSProperties,
-> extends ComponentController<ELEMENT, CSSProperties[PROP]> {
+> extends StreamedComponentController<ELEMENT, CSSProperties[PROP]> {
   private initial: string;
 
   constructor(
@@ -16,11 +16,11 @@ export class StyleComponentController<
     this.initial = this.element.style[key as any];
   }
 
-  deinitialize(): void {
+  protected deinitialize(): void {
     this.element.style[this.key as any] = this.initial;
   }
 
-  applyValue(value: CSSProperties[PROP]): void {
-    this.element.style[this.key as any] = String(value);
+  protected applyValue(value: CSSProperties[PROP] | undefined): void {
+    this.element.style[this.key as any] = (value ?? this.initial).toString();
   }
 }

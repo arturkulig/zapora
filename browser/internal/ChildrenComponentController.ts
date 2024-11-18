@@ -1,6 +1,6 @@
 import { AnyEventMap, ZBChildren, ZBElement } from "../public";
 import { ChildNodeManipulator } from "./ChildNodeManipulator";
-import { ComponentController } from "./ComponentController";
+import { StreamedComponentController } from "./ComponentController";
 import { ContextComposer } from "./ContextComposer";
 import { createDomElement } from "./createDomElement";
 import { ElementController } from "./ElementController";
@@ -21,12 +21,12 @@ import {
 
 export class ChildrenComponentController<
   ELEMENT extends Element,
-> extends ComponentController<ELEMENT, ZBChildren> {
+> extends StreamedComponentController<ELEMENT, ZBChildren> {
   private controllers = new WeakMap<
     Node,
     ElementController<AnyElement, AnyEventMap>
   >();
-  private keyMap = new WeakMap<Node, ZonePath>();
+  private zonedNodesMap = new WeakMap<Node, ZonePath>();
   private localStates: ComponentStateEntry[] = [];
 
   constructor(
@@ -36,40 +36,52 @@ export class ChildrenComponentController<
     super(element);
   }
 
+  mounted() {
+    for (const child of Array.from(this.element.childNodes)) {
+      this.controllers.get(child)?.mounted();
+    }
+  }
+
   protected deinitialize(): void {
     const children = Array.from(this.element.childNodes);
     this.element.replaceChildren();
     for (const child of children) {
       const elementController = this.controllers.get(child);
       if (elementController) {
-        elementController.applyDescription({}, this.contexts);
         elementController.unmounted();
       }
     }
   }
-  protected applyValue(rawRight: ZBChildren): void {
+  protected applyValue(rawRight: ZBChildren | undefined): void {
+    const leftNodes = Array.from(this.element.childNodes);
+
+    if (!rawRight) {
+      if (this.element.childNodes.length > 0) {
+        for (const node of leftNodes) {
+          this.controllers.get(node)?.unmounted();
+        }
+        this.element.replaceChildren();
+        this.localStates = [];
+        this.zonedNodesMap = new WeakMap();
+      }
+      return;
+    }
+
     const pathedRight: ZBPathedFinalChildren = [];
+    const usedStates: ComponentStateEntry[] = [];
     resolveNonElements(
       rawRight,
       [],
       this.localStates,
+      usedStates,
       this.contexts,
       pathedRight,
     );
+    this.localStates = usedStates;
 
-    const leftNodes = Array.from(this.element.childNodes);
+    const rightMaterialized = this.materializeRightNodes(pathedRight);
 
-    const pathedLeftChildren: ZonedNode[] = getZonedLeftSide(
-      leftNodes,
-      this.keyMap,
-    );
-
-    const rightSettled = materializeRightNodes(pathedLeftChildren, pathedRight);
-
-    const { inserts, existing, remove } = compactRender(
-      leftNodes,
-      rightSettled,
-    );
+    const { inserts, existing, remove } = this.compactRender(rightMaterialized);
 
     // removal of left out
     for (const node of remove) {
@@ -93,11 +105,11 @@ export class ChildrenComponentController<
     }
 
     // follow with new properties on all children
-    finalizeRightNodes(rightSettled, this.controllers);
+    this.finalizeRightNodes(rightMaterialized);
 
     // inform of the mount
     if (this.element.parentNode) {
-      for (const settled of rightSettled) {
+      for (const settled of rightMaterialized) {
         if (!settled.present && settled.type === ZBFinalElementTag.element) {
           this.controllers.get(settled.node)!.mounted();
         }
@@ -105,98 +117,95 @@ export class ChildrenComponentController<
     }
   }
 
-  mounted() {
-    for (const child of Array.from(this.element.childNodes)) {
-      this.controllers.get(child)?.mounted();
+  private finalizeRightNodes(settledList: Settled[]) {
+    for (const settled of settledList) {
+      if (settled.type === ZBFinalElementTag.element) {
+        let controller: ElementController<AnyElement, AnyEventMap>;
+        if (!settled.present) {
+          controller = new ElementController(settled.node);
+          this.controllers.set(settled.node, controller);
+        }
+        const foundController = this.controllers.get(settled.node);
+        if (!foundController) {
+          throw new Error("Alien element encountered among nodes");
+        }
+        controller = foundController;
+        controller.applyDescription(settled.desc, settled.context);
+      }
     }
   }
-}
 
-function compactRender(leftNodes: ChildNode[], settledList: Settled[]) {
-  const nodesLeftForRemoval = new Set(leftNodes);
+  private compactRender(settledList: Settled[]) {
+    const nodesLeftForRemoval = new Set(Array.from(this.element.childNodes));
 
-  const insertInstructions: {
-    inserts: ChildNode[];
-    before: ChildNode | null;
-  }[] = [{ inserts: [], before: null }];
+    const insertInstructions: {
+      inserts: ChildNode[];
+      before: ChildNode | null;
+    }[] = [{ inserts: [], before: null }];
 
-  for (const settled of settledList) {
-    const lastInstruction = insertInstructions.at(-1)!;
+    for (const settled of settledList) {
+      const lastInstruction = insertInstructions.at(-1)!;
 
-    if (settled.present) {
-      nodesLeftForRemoval.delete(settled.node);
+      if (settled.present) {
+        nodesLeftForRemoval.delete(settled.node);
 
-      if (lastInstruction.before) {
-        lastInstruction.inserts.push(lastInstruction.before);
-        lastInstruction.before = settled.node;
+        if (lastInstruction.before) {
+          lastInstruction.inserts.push(lastInstruction.before);
+          lastInstruction.before = settled.node;
+        } else {
+          lastInstruction.before = settled.node;
+        }
       } else {
-        lastInstruction.before = settled.node;
-      }
-    } else {
-      if (lastInstruction.before) {
-        insertInstructions.push({ inserts: [settled.node], before: null });
-      } else {
-        lastInstruction.inserts.push(settled.node);
+        if (lastInstruction.before) {
+          insertInstructions.push({ inserts: [settled.node], before: null });
+        } else {
+          lastInstruction.inserts.push(settled.node);
+        }
       }
     }
-  }
 
-  const existing: ChildNode[] = [];
+    const existing: ChildNode[] = [];
 
-  for (const insert of insertInstructions) {
-    if (insert.before) {
-      existing.push(insert.before);
-    }
-  }
-
-  return { inserts: insertInstructions, existing, remove: nodesLeftForRemoval };
-}
-
-function finalizeRightNodes(
-  settledList: Settled[],
-  controllers: WeakMap<AnyElement, ElementController<AnyElement, AnyEventMap>>,
-) {
-  for (const settled of settledList) {
-    if (settled.type === ZBFinalElementTag.element) {
-      let controller: ElementController<AnyElement, AnyEventMap>;
-      if (!settled.present) {
-        controller = new ElementController(settled.node);
-        controllers.set(settled.node, controller);
+    for (const insert of insertInstructions) {
+      if (insert.before) {
+        existing.push(insert.before);
       }
-      const foundController = controllers.get(settled.node);
-      if (!foundController) {
-        throw new Error("Alien element encountered among nodes");
-      }
-      controller = foundController;
-      controller.applyDescription(settled.desc, settled.context);
     }
-  }
-}
 
-function materializeRightNodes(
-  pathedLeftChildren: ZonedNode[],
-  resolvedRight: ZBPathedFinalChildren,
-) {
-  const result: Settled[] = [];
-  for (const pathedRightChild of resolvedRight) {
-    const leftNodeMatchingPath = findOfKey(
-      pathedLeftChildren,
-      pathedRightChild.path,
-    )?.node;
-    result.push(settleOnNode(pathedRightChild, leftNodeMatchingPath));
+    return {
+      inserts: insertInstructions,
+      existing,
+      remove: nodesLeftForRemoval,
+    };
   }
-  return result;
-}
 
-function getZonedLeftSide(
-  leftNodes: ChildNode[],
-  keyMap: WeakMap<Node, ZonePath>,
-) {
-  const result: ZonedNode[] = [];
-  for (const node of leftNodes) {
-    result.push({ path: keyMap.get(node)!, node });
+  private materializeRightNodes(resolvedRight: ZBPathedFinalChildren) {
+    const pathedLeftChildren: ZonedNode[] = this.getZonedLeftSide();
+
+    const list: Settled[] = [];
+    const nextZoneNodesMap = new WeakMap<Node, ZonePath>();
+
+    for (const pathedRightChild of resolvedRight) {
+      const leftNodeMatchingPath = findOfKey(
+        pathedLeftChildren,
+        pathedRightChild.path,
+      )?.node;
+      const settled = settleOnNode(pathedRightChild, leftNodeMatchingPath);
+      list.push(settled);
+      nextZoneNodesMap.set(settled.node, pathedRightChild.path);
+    }
+
+    this.zonedNodesMap = nextZoneNodesMap;
+    return list;
   }
-  return result;
+
+  private getZonedLeftSide() {
+    const result: ZonedNode[] = [];
+    for (const node of Array.from(this.element.childNodes)) {
+      result.push({ path: this.zonedNodesMap.get(node)!, node });
+    }
+    return result;
+  }
 }
 
 type Settled =

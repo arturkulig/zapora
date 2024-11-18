@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Subject } from "@zapora/core";
 import { html, render } from "../index";
 
-describe("renders props", () => {
+describe("listenes to events", () => {
   let root: HTMLDivElement;
   beforeEach(() => {
     root = document.createElement("div");

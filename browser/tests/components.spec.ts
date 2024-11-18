@@ -179,4 +179,33 @@ describe("renders components", () => {
 
     destroy();
   });
+
+  it("looses state of temporarily disappearing component", async () => {
+    const customInput = stateful((props: { initial: string }) => ({
+      value: props.initial,
+    }))((props, { value }) => {
+      return html.input({
+        props: { id: "testId", value, initialValue: props.initial } as any,
+      });
+    });
+
+    const children$ = new Atom<ZBChildren>([
+      customInput.key`A`({ initial: "A" }),
+    ]);
+
+    const destroy = render(
+      html.div({
+        children: children$,
+      }),
+      root,
+    );
+
+    expect((root.querySelector("#testId") as HTMLInputElement).value).toBe("A");
+
+    await children$.next([]);
+    await children$.next([customInput.key`A`({ initial: "B" })]);
+    expect((root.querySelector("#testId") as HTMLInputElement).value).toBe("B");
+
+    destroy();
+  });
 });
