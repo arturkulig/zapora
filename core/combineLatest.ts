@@ -1,13 +1,18 @@
 import { Observable } from "./Observable";
+import { Observer } from "./Observer";
 import { getQueueingObserver } from "./queueingObserver";
 import { State } from "./State";
 import { Subscribable } from "./Subscribable";
 import { then } from "./then";
 import { TidySubscription } from "./TidySubscription";
 
-type SourcesToCombine<T extends any[]> = Array<Subscribable<T[number]>> & {
+type StatesToCombine<T extends any[]> = {
+  [id in Extract<keyof T, number>]: State<T[id]>;
+};
+type SourcesToCombine<T extends any[]> = {
   [id in Extract<keyof T, number>]: Subscribable<T[id]>;
 };
+
 enum CombiningEntryStatus {
   EMPTY,
   VALUE,
@@ -20,9 +25,17 @@ type CombiningEntry<T> =
   | { status: CombiningEntryStatus.VALUE; completed: boolean; value: T };
 
 export function combineLatest<const T extends any[] = unknown[]>(
-  sources: SourcesToCombine<T>,
+  _sources: StatesToCombine<T>,
+): State<T>;
+export function combineLatest<const T extends any[] = unknown[]>(
+  _sources: SourcesToCombine<T>,
+): Observable<T>;
+export function combineLatest<const T extends any[] = unknown[]>(
+  _sources: SourcesToCombine<T>,
 ): Observable<T> {
-  return new Observable<T>((observer) => {
+  const sources: Array<Subscribable<T[number]>> = _sources as any;
+
+  const producer = (observer: Observer<T>) => {
     const queueingObserver = getQueueingObserver(observer);
     const { next, complete } = queueingObserver;
 
@@ -110,5 +123,16 @@ export function combineLatest<const T extends any[] = unknown[]>(
         }
       }
     });
-  });
+  };
+
+  for (const source of sources) {
+    if (!(source instanceof State)) {
+      return new Observable<T>(producer);
+    }
+  }
+
+  return new State<T>(
+    producer,
+    () => (sources as State<any>[]).map((source) => source.value) as T,
+  );
 }

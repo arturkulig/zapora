@@ -90,8 +90,23 @@ export class ChildrenComponentController<
     }
 
     // reorder of remaining
-    const parent = new ParentNodeManipulator(this.element);
-    parent.append(existing);
+    const elementAsParent = new ParentNodeManipulator(this.element);
+    for (let i = 0; i < this.element.childNodes.length; i++) {
+      const existingNode = existing[i];
+      if (this.element.childNodes[i] !== existingNode) {
+        console.log(
+          this.element.tagName,
+          "insertBefore",
+          existingNode instanceof Element
+            ? existingNode.tagName
+            : existingNode.textContent,
+        );
+        this.element.insertBefore(
+          existing[i],
+          this.element.childNodes[i] ?? null,
+        );
+      }
+    }
 
     // inserts of new
     for (const instruction of inserts) {
@@ -100,7 +115,7 @@ export class ChildrenComponentController<
           instruction.inserts,
         );
       } else {
-        parent.append(instruction.inserts);
+        elementAsParent.append(instruction.inserts);
       }
     }
 
@@ -136,8 +151,8 @@ export class ChildrenComponentController<
   }
 
   private compactRender(settledList: Settled[]) {
+    const existing: ChildNode[] = [];
     const nodesLeftForRemoval = new Set(Array.from(this.element.childNodes));
-
     const insertInstructions: {
       inserts: ChildNode[];
       before: ChildNode | null;
@@ -147,6 +162,7 @@ export class ChildrenComponentController<
       const lastInstruction = insertInstructions.at(-1)!;
 
       if (settled.present) {
+        existing.push(settled.node);
         nodesLeftForRemoval.delete(settled.node);
 
         if (lastInstruction.before) {
@@ -161,14 +177,6 @@ export class ChildrenComponentController<
         } else {
           lastInstruction.inserts.push(settled.node);
         }
-      }
-    }
-
-    const existing: ChildNode[] = [];
-
-    for (const insert of insertInstructions) {
-      if (insert.before) {
-        existing.push(insert.before);
       }
     }
 
