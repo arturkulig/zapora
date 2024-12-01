@@ -94,13 +94,6 @@ export class ChildrenComponentController<
     for (let i = 0; i < this.element.childNodes.length; i++) {
       const existingNode = existing[i];
       if (this.element.childNodes[i] !== existingNode) {
-        console.log(
-          this.element.tagName,
-          "insertBefore",
-          existingNode instanceof Element
-            ? existingNode.tagName
-            : existingNode.textContent,
-        );
         this.element.insertBefore(
           existing[i],
           this.element.childNodes[i] ?? null,

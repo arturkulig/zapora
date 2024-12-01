@@ -85,10 +85,10 @@ describe("renders props", () => {
     expect(rendered.id).toBe("lorem");
 
     await id$.complete();
-    expect(rendered.id).toBe("");
+    expect(rendered.id).toBe("lorem");
 
     await id$.next("ipsum");
-    expect(rendered.id).toBe("");
+    expect(rendered.id).toBe("lorem");
 
     destroy();
   });

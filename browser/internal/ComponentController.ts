@@ -85,10 +85,7 @@ export abstract class StreamedComponentController<
       },
       next: (value) => this.applyUnit(value),
       complete: () => {
-        if (!completed) {
-          completed = true;
-          return this.applyUnit(undefined);
-        }
+        completed = true;
       },
     });
   }
