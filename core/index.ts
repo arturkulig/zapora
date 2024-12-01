@@ -1,5 +1,6 @@
 // autoindex
 export * from "./Atom";
+export * from "./Bidirectional";
 export * from "./BroadcastObserver";
 export * from "./combineLatest";
 export * from "./concat";
