@@ -2,10 +2,10 @@ import { describe, expect, it } from "@jest/globals";
 import { Observable } from "./Observable";
 import { SimpleSubscription } from "./SimpleSubscription";
 import { delay } from "./delay";
-import { then } from "./internal/then";
 import { ofIterable } from "./ofIterable";
 import { switchMap } from "./switchMap";
 import { expectStream } from "./tests/expectStream";
+import { then } from "./then";
 
 describe("switchMap operator", () => {
   it("switches between sources", async () => {

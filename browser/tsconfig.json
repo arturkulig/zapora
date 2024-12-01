@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "types": [],
+    "typeRoots": []
+  },
+  "include": ["./index.ts"],
+  "exclude": ["node_modules"]
+}

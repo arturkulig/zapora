@@ -12,9 +12,7 @@
     "stream",
     "dom",
     "render",
-    "server",
-    "http",
-    "websockets"
+    "server"
   ],
   "author": "Artur Kulig",
   "license": "ISC",

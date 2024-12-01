@@ -1,9 +1,12 @@
 import { glob, readFile, writeFile } from "node:fs/promises";
+import {resolve} from "node:path"
 import { basename, dirname } from "node:path";
 
 const INTENDED_TOKEN = "// autoindex";
 
-for await (const index of glob("./**/index.ts")) {
+for await (const index of glob("./**/index.ts", {
+  cwd: resolve(import.meta.dirname, "../")
+})) {
   if (index.match(/^node_modules/) != null) {
     continue;
   }

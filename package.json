@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "test": "jest --passWithNoTests",
-    "dev": "jest --watch --clearCache"
+    "dev": "jest --watch --clearCache",
+    "autoindex": "npx tsx ./_scripts/autoindex.ts"
   },
   "author": "",
   "license": "ISC",

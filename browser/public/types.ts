@@ -1,17 +1,17 @@
 import type { Atom, Observer } from "@zapora/core";
-import { Properties as CSSProperties } from "csstype";
-import type { AnimationMessage } from "../internal/applyAnimation";
-import { ChildKey } from "../internal/ChildKey";
-import { ContextResolver } from "../internal/ContextResolver";
-import { ElementNamespace } from "../internal/ElementNamespaces";
-import {
+import type { Properties as CSSProperties } from "csstype";
+import type { AnimationMessage } from "../internal/AnimationComponentController";
+import type { ChildKey } from "../internal/ChildKey";
+import type { ContextResolver } from "../internal/ContextResolver";
+import type { ElementNamespace } from "../internal/ElementNamespaces";
+import type {
   ZB_NS,
   ZB_TAG_COMPONENT,
   ZB_TAG_CONTEXT,
   ZB_TAG_FRAGMENT,
 } from "../internal/fragmentSymbols";
-import { ImmutableProperties } from "../internal/ImmutableProperties";
-import { StreamMaybe } from "../internal/StreamMaybe";
+import type { ImmutableProperties } from "../internal/ImmutableProperties";
+import type { StreamMaybe } from "../internal/StreamMaybe";
 
 export type ZBChild =
   | ZBContextElement
