@@ -7,17 +7,20 @@ import { Subscribable } from "./Subscribable";
 export function scan<T, U>(
   source: State<T>,
   accumulate: ScanAccumulator<T, U>,
+  start: U,
 ): State<U>;
 export function scan<T, U>(
   source: Subscribable<T>,
   accumulate: ScanAccumulator<T, U>,
+  start: U,
 ): Observable<U>;
 export function scan<T, U>(
   source: State<T> | Subscribable<T>,
   accumulate: ScanAccumulator<T, U>,
+  start: U,
 ): State<U> | Observable<U> {
   const producer: Producer<U> = (observer: Observer<U>) => {
-    let lastAccumulate: U | undefined = undefined;
+    let lastAccumulate: U = start;
     const { next, complete } = observer;
 
     return source.subscribe({
@@ -29,7 +32,7 @@ export function scan<T, U>(
             next: (value: T) =>
               next.call(
                 observer,
-                (lastAccumulate = accumulate(value, lastAccumulate)),
+                (lastAccumulate = accumulate(lastAccumulate, value)),
               ),
           }
         : undefined),
@@ -37,9 +40,9 @@ export function scan<T, U>(
     });
   };
   if (source instanceof State) {
-    return new State(producer, () => accumulate(source.value));
+    return new State(producer, () => accumulate(start, source.value));
   }
   return new Observable(producer);
 }
 
-type ScanAccumulator<T, U> = (nextValue: T, previousValue?: U) => U;
+type ScanAccumulator<T, U> = (previousValue: U, nextValue: T) => U;
