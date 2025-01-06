@@ -1,8 +1,10 @@
 import { StreamedComponentController } from "./ComponentController";
 
-export class ClassNameComponentController<
-  ELEMENT extends Element,
-> extends StreamedComponentController<ELEMENT, string> {
+export interface ElementWithClass {
+  className: string
+}
+
+export class ClassNameComponentController extends StreamedComponentController<Element, string> {
   protected deinitialize(): void {
     this.element.className = "";
   }

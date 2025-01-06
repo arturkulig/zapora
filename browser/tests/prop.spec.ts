@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { Atom, Subject } from "@zapora/core";
-import { html, render } from "../index";
+import { custom, html, render } from "../index";
 
 describe("renders props", () => {
   let root: HTMLDivElement;
@@ -17,6 +17,22 @@ describe("renders props", () => {
     );
 
     const rendered = root.children[0];
+    expect(rendered.id).toBe("testId");
+
+    destroy();
+    expect(rendered.id).toBe("");
+  });
+
+  it("applied and removed (custom)", () => {
+    const destroy = render(
+      custom<{ id: string }>("test-element")({
+        props: { id: "testId" },
+      }),
+      root,
+    );
+
+    const rendered = root.children[0];
+    expect(rendered.tagName).toBe("TEST-ELEMENT");
     expect(rendered.id).toBe("testId");
 
     destroy();

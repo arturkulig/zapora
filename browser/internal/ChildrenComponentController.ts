@@ -1,4 +1,4 @@
-import { AnyEventMap, ZBChildren, ZBElement } from "../public";
+import { ZBChildren, ZBElement } from "../public";
 import { ChildNodeManipulator } from "./ChildNodeManipulator";
 import { StreamedComponentController } from "./ComponentController";
 import { ContextComposer } from "./ContextComposer";
@@ -19,18 +19,16 @@ import {
   ZonePath,
 } from "./ZonePath";
 
-export class ChildrenComponentController<
-  ELEMENT extends Element,
-> extends StreamedComponentController<ELEMENT, ZBChildren> {
-  private controllers = new WeakMap<
-    Node,
-    ElementController<AnyElement, AnyEventMap>
-  >();
+export class ChildrenComponentController extends StreamedComponentController<
+  ParentNode,
+  ZBChildren
+> {
+  private controllers = new WeakMap<Node, ElementController>();
   private zonedNodesMap = new WeakMap<Node, ZonePath>();
   private localStates: ComponentStateEntry[] = [];
 
   constructor(
-    element: ELEMENT,
+    element: ParentNode,
     private contexts: ContextComposer,
   ) {
     super(element);
@@ -128,7 +126,7 @@ export class ChildrenComponentController<
   private finalizeRightNodes(settledList: Settled[]) {
     for (const settled of settledList) {
       if (settled.type === ZBFinalElementTag.element) {
-        let controller: ElementController<AnyElement, AnyEventMap>;
+        let controller: ElementController;
         if (!settled.present) {
           controller = new ElementController(settled.node);
           this.controllers.set(settled.node, controller);

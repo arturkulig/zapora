@@ -1,16 +1,18 @@
-import { Properties as CSSProperties } from "csstype";
 import { StreamedComponentController } from "./ComponentController";
-import { AnyElement } from "./ElementNamespaces";
 
-export class StyleComponentController<
-  ELEMENT extends AnyElement,
-  PROP extends keyof CSSProperties,
-> extends StreamedComponentController<ELEMENT, CSSProperties[PROP]> {
+interface ElementWithStyle {
+  style: any;
+}
+
+export class StyleComponentController extends StreamedComponentController<
+  ElementWithStyle,
+  string
+> {
   private initial: string;
 
   constructor(
-    element: ELEMENT,
-    private key: PROP,
+    element: ElementCSSInlineStyle,
+    private key: string,
   ) {
     super(element);
     this.initial = this.element.style[key as any];
@@ -20,7 +22,7 @@ export class StyleComponentController<
     this.element.style[this.key as any] = this.initial;
   }
 
-  protected applyValue(value: CSSProperties[PROP] | undefined): void {
-    this.element.style[this.key as any] = (value ?? this.initial).toString();
+  protected applyValue(value: string | undefined): void {
+    this.element.style[this.key as any] = value ?? this.initial;
   }
 }

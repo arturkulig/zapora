@@ -1,59 +1,36 @@
 import { Observer } from "@zapora/core";
-import { Properties as CSSProperties } from "csstype";
-import {
-  AnyEventMap,
-  ZBElementAllArguments,
-  ZBElementPropNames,
-} from "../public";
+import { ZBElement, ZBElementDesc } from "../public";
+import { AnimationComponentController } from "./AnimationComponentController";
 import { ChildrenComponentController } from "./ChildrenComponentController";
 import { ClassNameComponentController } from "./ClassNameComponentController";
-import { StreamedComponentController } from "./ComponentController";
 import { ContextComposer } from "./ContextComposer";
 import { AnyElement } from "./ElementNamespaces";
 import { EventComponentController } from "./EventComponentController";
-import { ImmutableProperties } from "./ImmutableProperties";
 import { PropsComponentController } from "./PropsComponentController";
 import { StyleComponentController } from "./StyleComponentController";
 
-type CSSPropertiesNames = keyof CSSProperties;
-
-interface ElementComponentsControllers<ELEMENT extends AnyElement> {
-  className?: ClassNameComponentController<ELEMENT>;
-  props: Partial<
-    Record<ZBElementPropNames<ELEMENT>, PropsComponentController<ELEMENT, any>>
-  >;
-  style: Partial<
-    Record<CSSPropertiesNames, StyleComponentController<ELEMENT, any>>
-  >;
-  animate?: StreamedComponentController<ELEMENT, any>;
-  on: Record<string, EventComponentController<ELEMENT>>;
-  children?: ChildrenComponentController<ELEMENT>;
+interface ElementComponentsControllers {
+  className?: ClassNameComponentController;
+  props: Record<string, PropsComponentController>;
+  style: Record<string, StyleComponentController>;
+  animate?: AnimationComponentController;
+  on: Record<string, EventComponentController>;
+  children?: ChildrenComponentController;
 }
 
-type EventNames<
-  ELEMENT extends AnyElement,
-  EVENTMAP extends AnyEventMap,
-> = keyof ZBElementAllArguments<ELEMENT, EVENTMAP>["on"];
-
-export class ElementController<
-  ELEMENT extends AnyElement,
-  EVENTMAP extends AnyEventMap,
-> {
-  presentComponents: ElementComponentsControllers<ELEMENT> = {
+export class ElementController {
+  presentComponents: ElementComponentsControllers = {
     props: {},
     style: {},
     on: {},
   };
 
-  ref: Observer<ELEMENT> | undefined = undefined;
+  ref: Observer<Element> | undefined = undefined;
 
-  constructor(private element: ELEMENT) {}
+  constructor(private element: AnyElement) {}
 
-  applyDescription(
-    description: ZBElementAllArguments<ELEMENT, EVENTMAP>,
-    contexts: ContextComposer,
-  ) {
-    const futureComponents: ElementComponentsControllers<ELEMENT> = {
+  applyDescription(description: ZBElementDesc, contexts: ContextComposer) {
+    const futureComponents: ElementComponentsControllers = {
       props: {},
       style: {},
       on: {},
@@ -71,8 +48,8 @@ export class ElementController<
   }
 
   private applyClassName(
-    description: ZBElementAllArguments<ELEMENT, EVENTMAP>,
-    futureComponents: ElementComponentsControllers<ELEMENT>,
+    description: ZBElementDesc,
+    futureComponents: ElementComponentsControllers,
   ) {
     if (
       description.className != null ||
@@ -80,91 +57,64 @@ export class ElementController<
     ) {
       (futureComponents.className =
         this.presentComponents.className ||
-        new ClassNameComponentController<ELEMENT>(this.element)).applySource(
+        new ClassNameComponentController(this.element)).applySource(
         description.className,
       );
     }
   }
 
   private applyProperties(
-    description: ZBElementAllArguments<ELEMENT, EVENTMAP>,
-    futureComponents: ElementComponentsControllers<ELEMENT>,
+    description: ZBElementDesc,
+    futureComponents: ElementComponentsControllers,
   ) {
-    const presentNames = Object.keys(
-      this.presentComponents.props,
-    ) as ZBElementPropNames<ELEMENT>[];
-    const futureNames = description.props
-      ? (Object.keys(description.props) as ZBElementPropNames<ELEMENT>[])
-      : [];
-    const propNames = new Set<ZBElementPropNames<ELEMENT>>([
-      ...presentNames,
-      ...futureNames,
-    ]);
+    const presentNames = Object.keys(this.presentComponents.props);
+    const futureNames = description.props ? Object.keys(description.props) : [];
+    const propNames = new Set([...presentNames, ...futureNames]);
     for (const propName of propNames) {
       (futureComponents.props[propName] =
         this.presentComponents.props[propName] ||
-        new PropsComponentController<
-          ELEMENT,
-          Exclude<keyof ELEMENT, ImmutableProperties>
-        >(
+        new PropsComponentController<string, any>(
           this.element,
-          propName as Exclude<keyof ELEMENT, ImmutableProperties>,
+          propName,
         )).applySource(description.props?.[propName]);
     }
   }
 
   private applyStyle(
-    description: ZBElementAllArguments<ELEMENT, EVENTMAP>,
-    futureComponents: ElementComponentsControllers<ELEMENT>,
+    description: ZBElementDesc,
+    futureComponents: ElementComponentsControllers,
   ) {
-    const presentNames = Object.keys(
-      this.presentComponents.style,
-    ) as CSSPropertiesNames[];
-    const futureNames = description.style
-      ? (Object.keys(description.style) as CSSPropertiesNames[])
-      : [];
-    const propNames = new Set<CSSPropertiesNames>([
-      ...presentNames,
-      ...futureNames,
-    ]);
+    const presentNames = keysOf(this.presentComponents.style);
+    const futureNames = description.style ? keysOf(description.style) : [];
+    const propNames = new Set([...presentNames, ...futureNames]);
     for (const propName of propNames) {
       (futureComponents.style[propName] =
         this.presentComponents.style[propName] ||
-        new StyleComponentController<ELEMENT, CSSPropertiesNames>(
-          this.element,
-          propName,
-        )).applySource(description.style?.[propName]);
+        new StyleComponentController(this.element, propName)).applySource(
+        description.style?.[propName],
+      );
     }
   }
 
   private applyEventHandlers(
-    description: ZBElementAllArguments<ELEMENT, EVENTMAP>,
-    futureComponents: ElementComponentsControllers<ELEMENT>,
+    description: ZBElementDesc,
+    futureComponents: ElementComponentsControllers,
   ) {
-    const presentNames = Object.keys(this.presentComponents.on) as EventNames<
-      ELEMENT,
-      EVENTMAP
-    >[];
-    const futureNames = description.on
-      ? (Object.keys(description.on) as EventNames<ELEMENT, EVENTMAP>[])
-      : [];
-    const propNames = new Set<EventNames<ELEMENT, EVENTMAP>>([
-      ...presentNames,
-      ...futureNames,
-    ]);
+    const presentNames = keysOf(this.presentComponents.on);
+    const futureNames = description.on ? keysOf(description.on) : [];
+    const propNames = new Set([...presentNames, ...futureNames]);
     for (const propName of propNames) {
       (futureComponents.on[propName] =
         this.presentComponents.on[propName] ||
-        new EventComponentController<ELEMENT>(
-          this.element,
-          propName,
-        )).applyUnit(description.on?.[propName]);
+        new EventComponentController(this.element, propName)).applyUnit(
+        description.on?.[propName],
+      );
     }
   }
 
   private applyChildren(
-    description: ZBElementAllArguments<ELEMENT, EVENTMAP>,
-    futureComponents: ElementComponentsControllers<ELEMENT>,
+    description: ZBElementDesc,
+    futureComponents: ElementComponentsControllers,
     contexts: ContextComposer,
   ) {
     if (
@@ -173,10 +123,9 @@ export class ElementController<
     ) {
       (futureComponents.children =
         this.presentComponents.children ||
-        new ChildrenComponentController<ELEMENT>(
-          this.element,
-          contexts,
-        )).applySource(description.children);
+        new ChildrenComponentController(this.element, contexts)).applySource(
+        description.children,
+      );
     }
   }
 
@@ -204,4 +153,10 @@ export class ElementController<
     }
     this.presentComponents.children?.destroy();
   }
+}
+
+function keysOf<T extends Record<any, any>>(
+  subject: T,
+): Array<Extract<keyof T, string>> {
+  return (Object.keys(subject) as any) ?? [];
 }

@@ -17,7 +17,7 @@ describe("renders components", () => {
 
   it("passing props", async () => {
     const par = stateless((props: { text: string }) =>
-      html.p({ children: [props.text] }),
+      html.p({}, [props.text]),
     );
     const children$ = new Atom<ZBChildList>([
       par({ text: "Hello" }),
@@ -25,10 +25,12 @@ describe("renders components", () => {
       par({ text: "world" }),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -56,7 +58,7 @@ describe("renders components", () => {
       (props: { countdown: number }): ZBChildren =>
         props.countdown > 0
           ? par({ countdown: props.countdown - 1 })
-          : html.p({ children: ["A"] }),
+          : html.p({}, ["A"]),
     );
 
     const children$ = new Atom<ZBChildList>([
@@ -66,10 +68,12 @@ describe("renders components", () => {
     ]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -95,10 +99,12 @@ describe("renders components", () => {
     const children$ = new Atom<ZBChildren>([custom({})]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -146,10 +152,12 @@ describe("renders components", () => {
     ]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -193,12 +201,7 @@ describe("renders components", () => {
       customInput.key`A`({ initial: "A" }),
     ]);
 
-    const destroy = render(
-      html.div({
-        children: children$,
-      }),
-      root,
-    );
+    const destroy = render(html.div({}, children$), root);
 
     expect((root.querySelector("#testId") as HTMLInputElement).value).toBe("A");
 

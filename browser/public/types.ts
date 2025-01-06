@@ -59,74 +59,20 @@ export interface ZBComponentRender<
 
 export type ZBStateArchetype = Record<string, any>;
 
-export interface ZBElement<
-  ElementType = any,
-  EventMap extends AnyEventMap = AnyEventMap,
-> extends ZBElementAllArguments<ElementType, EventMap> {
+export interface ZBElement extends ZBElementDesc {
   namespace: ElementNamespace;
   tag: string;
   key?: ChildKey;
 }
 
-export type AnyEventMap =
-  | HTMLElementEventMap
-  | SVGElementEventMap
-  | MathMLElementEventMap;
-
-export interface ZBElementAllArguments<
-  ElementType = any,
-  EventMap extends AnyEventMap = AnyEventMap,
-> extends ZBElementDirectArguments<ElementType, EventMap> {
+export interface ZBElementDesc {
   children?: StreamMaybe<ZBChildren>;
-}
-
-export type ZBElementPropNames<ElementType> = Extract<
-  Exclude<keyof ElementType, ImmutableProperties>,
-  string
->;
-
-export interface ZBElementDirectArguments<
-  ElementType = any,
-  EventMap extends AnyEventMap = AnyEventMap,
-> {
   className?: StreamMaybe<string>;
-  props?: {
-    [id in ZBElementPropNames<ElementType>]?: StreamMaybe<ElementType[id]>;
-  };
-  style?: {
-    [id in keyof CSSProperties]?: StreamMaybe<CSSProperties[id]>;
-  };
+  props?: Record<string, StreamMaybe<any>>;
+  style?: Record<string, StreamMaybe<string>>;
   animate?: AnimationMessage | AnimationMessage[];
-  on?: {
-    [id in StringOnlyKeys<EventMap>]?: ZBEventHandler<EventMap[id]>;
-  } & {
-    [id in StringOnlyKeys<EventMap> as `${id}:passive`]?: ZBEventHandler<
-      EventMap[id]
-    >;
-  } & {
-    [id in StringOnlyKeys<EventMap> as `${id}:passive:capture`]?: ZBEventHandler<
-      EventMap[id]
-    >;
-  } & {
-    [id in StringOnlyKeys<EventMap> as `${id}:passive:capture:once`]?: ZBEventHandler<
-      EventMap[id]
-    >;
-  } & {
-    [id in StringOnlyKeys<EventMap> as `${id}:capture`]?: ZBEventHandler<
-      EventMap[id]
-    >;
-  } & {
-    [id in StringOnlyKeys<EventMap> as `${id}:capture:once`]?: ZBEventHandler<
-      EventMap[id]
-    >;
-  } & {
-    [id in StringOnlyKeys<EventMap> as `${id}:once`]?: ZBEventHandler<
-      EventMap[id]
-    >;
-  };
-  ref?: Observer<ElementType>;
+  on?: Record<string, ZBEventHandler>;
+  ref?: Observer<any>;
 }
 
 export type ZBEventHandler<E = Event> = ((event: E) => void) | Observer<E>;
-
-type StringOnlyKeys<T> = Extract<keyof T, string>;

@@ -22,9 +22,10 @@ interface AnimationState {
   finished: ReceivedReceit;
 }
 
-export class AnimationComponentController<
-  ELEMENT extends Element,
-> extends ComponentController<ELEMENT, AnimationComponentControllerSource> {
+export class AnimationComponentController extends ComponentController<
+  Animatable,
+  AnimationComponentControllerSource
+> {
   subscriptions = new Array<SourceState>();
   animations = new Array<AnimationState>();
 

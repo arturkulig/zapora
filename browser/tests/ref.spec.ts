@@ -69,10 +69,12 @@ describe("informs of references as render occurs", () => {
     ]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 

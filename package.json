@@ -9,8 +9,8 @@
     "browser"
   ],
   "scripts": {
-    "test": "jest --passWithNoTests",
-    "dev": "jest --watch --clearCache",
+    "test": "echo \"ENTER PACKAGE\"",
+    "dev": "echo \"ENTER PACKAGE\"",
     "autoindex": "npx tsx ./_scripts/autoindex.ts"
   },
   "author": "",

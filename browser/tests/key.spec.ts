@@ -14,10 +14,12 @@ describe("renders children", () => {
       html.div.key`A`({ props: { id: "e2" } }),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "app" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "app" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -41,10 +43,12 @@ describe("renders children", () => {
       html.div({ props: { id: "e1" } }),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "app" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "app" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -63,10 +67,12 @@ describe("renders children", () => {
       html.div.key`A`({ props: { id: "e1" } }),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "app" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "app" },
+        },
+        children$,
+      ),
       root,
     );
 

@@ -15,10 +15,12 @@ describe("renders fragments", () => {
     ];
     const children$ = new Atom<ZBChildList>(initial);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -45,10 +47,12 @@ describe("renders fragments", () => {
       fragment.key`A`([html.div({ props: { id: "e2" } })]),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -77,10 +81,12 @@ describe("renders fragments", () => {
       ]),
     ]);
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 

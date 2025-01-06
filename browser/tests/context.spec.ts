@@ -19,18 +19,18 @@ describe("renders with context", () => {
     const answer = new Context<string>();
 
     const paragraph = stateless((props: void, context) => {
-      return html.p({
-        children: ["answer is ", context.get(answer)],
-      });
+      return html.p({}, ["answer is ", context.get(answer)]);
     });
 
     const children$ = new Atom<ZBChildren>([answer.provide("42", paragraph())]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -45,9 +45,7 @@ describe("renders with context", () => {
     const answer = new Context<string>();
 
     const paragraph = stateless((props: void, context) => {
-      return html.p({
-        children: ["answer is ", context.get(answer)],
-      });
+      return html.p(undefined, ["answer is ", context.get(answer)]);
     });
 
     const children$ = new Atom<ZBChildren>([
@@ -55,10 +53,12 @@ describe("renders with context", () => {
     ]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 
@@ -72,21 +72,21 @@ describe("renders with context", () => {
   it("passes context through an element", async () => {
     const answer = new Context<string>();
 
-    const paragraph = stateless((props: void, context) => {
-      return html.p({
-        children: ["answer is ", context.get(answer)],
-      });
+    const paragraph = stateless((_props: void, context) => {
+      return html.p(undefined, ["answer is ", context.get(answer)]);
     });
 
     const children$ = new Atom<ZBChildren>([
-      answer.provide("42", html.div({ children: [paragraph()] })),
+      answer.provide("42", html.div({}, [paragraph()])),
     ]);
 
     const destroy = render(
-      html.div({
-        props: { id: "testId" },
-        children: children$,
-      }),
+      html.div(
+        {
+          props: { id: "testId" },
+        },
+        children$,
+      ),
       root,
     );
 

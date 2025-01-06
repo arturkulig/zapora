@@ -10,12 +10,6 @@ export abstract class ComponentController<ELEMENT, VALUE> {
   private currentValue: { applied: VALUE } | undefined = undefined;
 
   applyUnit(source: VALUE | undefined): void {
-    // console.log(
-    //   "CONSIDER",
-    //   this.currentValue?.applied !== source,
-    //   ": ",
-    //   source,
-    // );
     if (source == null) {
       this.currentValue = undefined;
       this.applyValue(undefined);
