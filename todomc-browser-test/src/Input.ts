@@ -9,9 +9,11 @@ export const Input = stateless(
     onSubmit: (result: string) => void;
     onBlur?: () => void;
   }) => {
-    return html.div({
-      className: "input-container",
-      children: [
+    return html.div(
+      {
+        className: "input-container",
+      },
+      [
         html.input({
           className: "new-todo",
           props: {
@@ -37,15 +39,17 @@ export const Input = stateless(
             },
           },
         }),
-        html.label({
-          className: "visually-hidden",
-          props: {
-            htmlFor: "todo-input",
+        html.label(
+          {
+            className: "visually-hidden",
+            props: {
+              htmlFor: "todo-input",
+            },
           },
-          children: [props.label],
-        }),
+          [props.label],
+        ),
       ],
-    });
+    );
   },
 );
 
