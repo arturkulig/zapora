@@ -8,7 +8,6 @@ import {
 export interface BidiWsOptions {
   Constructor?: WebSocketEligibleConstructor;
   url: string | URL;
-  binaryType: BinaryType;
   protocols?: string | string[];
   timeout: number;
 }
@@ -49,7 +48,7 @@ export function tryGetWebSocketClient(options: BidiWsOptions) {
     options.url,
     options.protocols,
   );
-  wsSocket.binaryType = options.binaryType;
+  wsSocket.binaryType = "arraybuffer";
   return openWebSocketClient({
     socket: wsSocket,
     timeout: options.timeout,
@@ -83,6 +82,12 @@ class WebSocketClient extends Bidirectional<
   WebSocketDuplexMessage,
   WebSocketDuplexMessage
 > {
+  #closing: undefined | CloseEvent = undefined;
+
+  get closeReason() {
+    return this.#closing;
+  }
+
   constructor(socket: WebSocketEligibleInstance) {
     super(
       new Observable<WebSocketDuplexMessage>((observer) => {
@@ -134,5 +139,9 @@ class WebSocketClient extends Bidirectional<
         },
       },
     );
+
+    socket.addEventListener("close", (event) => {
+      this.#closing = event;
+    });
   }
 }
