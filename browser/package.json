@@ -1,7 +1,7 @@
 {
   "name": "@zapora/browser",
-  "version": "0.1.0",
-  "description": "Streaming library with a built in pressure control and always up-to-date utils",
+  "version": "1.0.0",
+  "description": "DOM rendering library built on @zapora/core streaming library",
   "type": "module",
   "main": "index.ts",
   "scripts": {

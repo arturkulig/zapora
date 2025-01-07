@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { getBidiOfWebSocket } from "./WebSocketBidi";
+import { getWebSocketClient } from "./WebSocketBidi";
 import { getFakeWebSocketClass } from "./WebSocketSimulacrum";
 
 const JEST_TIMEOUT = 4000;
@@ -14,12 +14,12 @@ describe("WebSocket Duplex", () => {
   });
 
   it("connects", () => {
-    getBidiOfWebSocket({
+    getWebSocketClient({
       timeout: JEST_TIMEOUT,
       Constructor: WS,
       url: "localhost",
       protocols: "ws",
-      binaryType: "arraybuffer"
+      binaryType: "arraybuffer",
     });
     expect(WS.instances.length).toBe(1);
   });
@@ -27,12 +27,12 @@ describe("WebSocket Duplex", () => {
   it("receives messages", async () => {
     const received: string[] = [];
 
-    const wsd = await getBidiOfWebSocket({
+    const wsd = await getWebSocketClient({
       timeout: JEST_TIMEOUT,
       Constructor: WS,
       url: "localhost",
       protocols: "ws",
-      binaryType: "arraybuffer"
+      binaryType: "arraybuffer",
     });
     expect(WS.instances.length).toBe(1);
 
@@ -68,12 +68,12 @@ describe("WebSocket Duplex", () => {
   it("sends messages to an empty buffer", async () => {
     const received: string[] = [];
 
-    const wsd = await getBidiOfWebSocket({
+    const wsd = await getWebSocketClient({
       timeout: JEST_TIMEOUT,
       Constructor: WS,
       url: "localhost",
       protocols: "ws",
-      binaryType: "arraybuffer"
+      binaryType: "arraybuffer",
     });
     expect(WS.instances.length).toBe(1);
 

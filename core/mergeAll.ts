@@ -49,7 +49,7 @@ export function mergeAll<T>(
 
         if (
           concurrentSubscriptionsLimit != null &&
-          substreamsLiveTokens.size === concurrentSubscriptionsLimit
+          substreamsLiveTokens.size >= concurrentSubscriptionsLimit
         ) {
           return new Promise<void>((resolve) => {
             maxSubstreamsRelease = resolve;

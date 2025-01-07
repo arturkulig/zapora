@@ -6,7 +6,8 @@
   "main": "index.js",
   "workspaces": [
     "core",
-    "browser"
+    "browser",
+    "websocket-client"
   ],
   "scripts": {
     "test": "echo \"ENTER PACKAGE\"",

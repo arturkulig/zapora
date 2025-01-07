@@ -1,11 +1,13 @@
 {
   "name": "@zapora/core",
-  "version": "0.1.0",
-  "description": "Streaming library with a built in pressure control and always up-to-date utils",
+  "version": "1.0.0",
+  "description": "Streaming library with a bidirectional pressure control",
   "type": "module",
   "main": "index.ts",
   "keywords": [
-    "stream", "observable", "pressure control"
+    "stream",
+    "observable",
+    "pressure control"
   ],
   "scripts": {
     "test": "jest --passWithNoTests",
