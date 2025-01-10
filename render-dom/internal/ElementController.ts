@@ -1,5 +1,5 @@
 import { Observer } from "@zapora/core";
-import { ZBElement, ZBElementDesc } from "../public";
+import { ZBElementDesc } from "../public";
 import { AnimationComponentController } from "./AnimationComponentController";
 import { ChildrenComponentController } from "./ChildrenComponentController";
 import { ClassNameComponentController } from "./ClassNameComponentController";

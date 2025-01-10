@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../ts/tsconfig.json",
   "compilerOptions": {
     "lib": ["DOM", "ESNext"],
     "types": [],

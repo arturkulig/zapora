@@ -15,7 +15,6 @@
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "./",
     "types": [],
     "typeRoots": ["./node_modules/@types"],
     "skipLibCheck": true,
