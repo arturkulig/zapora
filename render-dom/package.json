@@ -1,5 +1,5 @@
 {
-  "name": "@zapora/browser",
+  "name": "@zapora/render-dom",
   "version": "1.0.0",
   "description": "DOM rendering library built on @zapora/core streaming library",
   "type": "module",

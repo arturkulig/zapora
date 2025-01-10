@@ -1,4 +1,4 @@
-import { render } from "@zapora/browser";
+import { render } from "@zapora/render-dom";
 
 import "todomvc-app-css/index.css";
 import "todomvc-common/base.css";

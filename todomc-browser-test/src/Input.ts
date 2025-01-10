@@ -1,4 +1,4 @@
-import { html, stateless } from "@zapora/browser";
+import { html, stateless } from "@zapora/render-dom";
 
 export const Input = stateless(
   (props: {

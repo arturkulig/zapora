@@ -1,5 +1,5 @@
-import { html, stateful } from "@zapora/browser";
 import { map } from "@zapora/core";
+import { html, stateful } from "@zapora/render-dom";
 import { Input } from "./Input";
 import { Task } from "./Model";
 

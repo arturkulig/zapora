@@ -1,4 +1,4 @@
-import { fragment, stateful } from "@zapora/browser";
+import { fragment, stateful } from "@zapora/render-dom";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { Main } from "./Main";

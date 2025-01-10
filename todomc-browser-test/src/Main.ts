@@ -1,5 +1,5 @@
-import { html, stateless } from "@zapora/browser";
 import { Atom, combineLatest, map } from "@zapora/core";
+import { html, stateless } from "@zapora/render-dom";
 import { Item } from "./Item";
 import { Tasks } from "./Model";
 import { hash$ } from "./locations";

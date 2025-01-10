@@ -6,7 +6,7 @@
   "main": "index.js",
   "workspaces": [
     "core",
-    "browser",
+    "render-dom",
     "websocket-client"
   ],
   "scripts": {

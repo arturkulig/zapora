@@ -1,4 +1,4 @@
-import { html, stateless } from "@zapora/browser";
+import { html, stateless } from "@zapora/render-dom";
 import { Input } from "./Input";
 
 export const Header = stateless((props: { onAdd: (title: string) => void }) => {
