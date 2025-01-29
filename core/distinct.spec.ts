@@ -14,7 +14,7 @@ describe("distinct operator", () => {
   it("distincts with an extractor", async () => {
     await expectStream(
       ofIterable([1, 2, 3, 3, 4, 4, 5, 6].map((num) => ({ num }))).pipe((_) =>
-        distinct(_, ({ num }) => num),
+        distinct(_, (a, b) => a.num === b.num),
       ),
       [1, 2, 3, 4, 5, 6].map((num) => ({ num })),
     );
