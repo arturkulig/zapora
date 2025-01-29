@@ -11,19 +11,19 @@ export function ofPromise<T>(source: Promise<T>) {
         if (subscription.closed) {
           return;
         }
-        then(observer.next?.(value), () => {
+        return then(observer.next?.(value), () => {
           if (subscription.closed) {
             return;
           }
-          observer.complete?.();
+          return observer.complete?.();
         });
       })
       .catch((error) => {
-        (globalThis as any).console.error(error);
+        console.error(error);
         if (subscription.closed) {
           return;
         }
-        observer.complete?.();
+        return observer.complete?.();
       });
 
     return subscription;
