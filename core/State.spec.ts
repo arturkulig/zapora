@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { Observer } from "./Observer";
 import { SimpleSubscription } from "./SimpleSubscription";
 import { State } from "./State";
+import { expectStream } from "./tests/expectStream";
 
 describe("State", () => {
   it("recomputes current state value", () => {
@@ -80,5 +81,23 @@ describe("State", () => {
     expect(remote?.next).toBeUndefined();
     expect(remote?.complete).toBeDefined();
     subB.cancel();
+  });
+
+  describe("when observed as a plain observable", () => {
+    it("pushes value as first message", async () => {
+      const state = new State(
+        (observer) => {
+          const sub = new SimpleSubscription();
+          void (async function () {
+            await (!sub.closed && !observer.closed && observer.next?.(1));
+            await (!sub.closed && !observer.closed && observer.complete?.());
+          })();
+          return sub;
+        },
+        () => 42,
+      );
+
+      await expectStream(state.toObservable(), [42, 1]);
+    });
   });
 });
