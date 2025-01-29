@@ -1,6 +1,16 @@
 import { Observable } from "./Observable";
 import { Subscribable } from "./Subscribable";
 
+export function filter<T, K extends T>(
+  this: void,
+  source: Subscribable<T>,
+  predicate: (value: T) => value is K,
+): Observable<T>;
+export function filter<T>(
+  this: void,
+  source: Subscribable<T>,
+  predicate: (value: T) => boolean,
+): Observable<T>;
 export function filter<T>(
   this: void,
   source: Subscribable<T>,
