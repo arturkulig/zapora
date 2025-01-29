@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { getWebSocketClient } from "./WebSocketBidi";
+import { PersistentWebSocketClient } from "./WebSocketBidi";
 import { getFakeWebSocketClass } from "./WebSocketSimulacrum";
 
 const JEST_TIMEOUT = 4000;
@@ -13,26 +13,25 @@ describe("WebSocket Duplex", () => {
     WS.cleanup();
   });
 
-  it("connects", () => {
-    getWebSocketClient({
+  it("connects", async () => {
+    const wsd = new PersistentWebSocketClient({
       timeout: JEST_TIMEOUT,
       Constructor: WS,
       url: "localhost",
       protocols: "ws",
-      binaryType: "arraybuffer",
     });
     expect(WS.instances.length).toBe(1);
+    await wsd.complete();
   });
 
   it("receives messages", async () => {
     const received: string[] = [];
 
-    const wsd = await getWebSocketClient({
+    const wsd = new PersistentWebSocketClient({
       timeout: JEST_TIMEOUT,
       Constructor: WS,
       url: "localhost",
       protocols: "ws",
-      binaryType: "arraybuffer",
     });
     expect(WS.instances.length).toBe(1);
 
@@ -59,7 +58,7 @@ describe("WebSocket Duplex", () => {
     fakeWs.simulateMessageReceiving("test B");
     expect(received).toEqual(["test A", "test B"]);
 
-    fakeWs.simulateClosing();
+    await fakeWs.simulateClosing();
     expect(received).toEqual(["test A", "test B", "CLOSED"]);
 
     sub.cancel();
@@ -68,12 +67,11 @@ describe("WebSocket Duplex", () => {
   it("sends messages to an empty buffer", async () => {
     const received: string[] = [];
 
-    const wsd = await getWebSocketClient({
+    const wsd = new PersistentWebSocketClient({
       timeout: JEST_TIMEOUT,
       Constructor: WS,
       url: "localhost",
       protocols: "ws",
-      binaryType: "arraybuffer",
     });
     expect(WS.instances.length).toBe(1);
 

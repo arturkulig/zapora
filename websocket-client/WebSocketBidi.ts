@@ -1,5 +1,5 @@
 import {
-  Bidirectional,
+  BidirectionalObservable,
   Observable,
   Subject,
   TidySubscription,
@@ -37,48 +37,66 @@ export type WebSocketEligibleInstance = Pick<
 
 export type WebSocketDuplexMessage = string | ArrayBufferLike;
 
-export async function getWebSocketClient(
-  options: BidiWsOptions,
-): Promise<Bidirectional<WebSocketDuplexMessage, WebSocketDuplexMessage>> {
-  return (await tryGetWebSocketClient(options)) ?? getWebSocketClient(options);
-}
+export class PersistentWebSocketClient extends BidirectionalObservable<
+  WebSocketDuplexMessage,
+  WebSocketDuplexMessage
+> {
+  constructor(options: BidiWsOptions) {
+    let closedOnDemand = false;
+    const intoSubject = new Subject<WebSocketDuplexMessage>();
+    let wsClient = getNewClient();
 
-export function tryGetWebSocketClient(options: BidiWsOptions) {
-  const wsSocket = new (options.Constructor ?? WebSocket)(
-    options.url,
-    options.protocols,
-  );
-  wsSocket.binaryType = "arraybuffer";
-  return openWebSocketClient({
-    socket: wsSocket,
-    timeout: options.timeout,
-  });
-}
-
-function openWebSocketClient(options: BidiWsConnectionOptions) {
-  const { socket } = options;
-
-  return new Promise<WebSocketClient | null>((resolve) => {
-    const openingTimeoutToken: ReturnType<typeof setTimeout> = setTimeout(
-      () => {
-        socket.close();
-        resolve(null);
-        socket.removeEventListener("open", onOpen);
-      },
-      options.timeout,
-    );
-
-    socket.addEventListener("open", onOpen);
-
-    function onOpen() {
-      clearTimeout(openingTimeoutToken);
-
-      resolve(new WebSocketClient(socket));
+    function getNewClient() {
+      const newClient = new WebSocketClient(options);
+      newClient.subscribe({
+        get closed() {
+          return intoSubject.closed;
+        },
+        next: (value) => {
+          if (!intoSubject.closed) {
+            return intoSubject.next(value);
+          }
+        },
+        complete: () => {
+          if (closedOnDemand) {
+            return;
+          }
+          wsClient = getNewClient();
+        },
+      });
+      return newClient;
     }
-  });
+
+    super(
+      new Observable<WebSocketDuplexMessage>((observer) => {
+        const innerSub = intoSubject.subscribe({
+          get closed() {
+            return observer.closed;
+          },
+          next: (value) => observer.next?.(value),
+        });
+        return new TidySubscription(() => {
+          if (!innerSub.closed) {
+            innerSub.cancel();
+          }
+        });
+      }),
+
+      {
+        get closed() {
+          return false;
+        },
+        next: (value) => wsClient.next(value),
+        complete: () => {
+          closedOnDemand = true;
+          return wsClient.complete();
+        },
+      },
+    );
+  }
 }
 
-class WebSocketClient extends Bidirectional<
+export class WebSocketClient extends BidirectionalObservable<
   WebSocketDuplexMessage,
   WebSocketDuplexMessage
 > {
@@ -88,17 +106,25 @@ class WebSocketClient extends Bidirectional<
     return this.#closing;
   }
 
-  constructor(socket: WebSocketEligibleInstance) {
+  constructor(options: BidiWsOptions) {
+    // socket
+    const socket = new (options.Constructor ?? WebSocket)(
+      options.url,
+      options.protocols,
+    );
+    socket.binaryType = "arraybuffer";
+
+    // interface
     super(
       new Observable<WebSocketDuplexMessage>((observer) => {
         const incomingMessages = new Subject<WebSocketDuplexMessage>();
         const sub = incomingMessages.subscribe(observer);
 
         function forIncomingOnMessage(event: MessageEvent) {
-          incomingMessages.next(event.data);
+          return incomingMessages.next(event.data as WebSocketDuplexMessage);
         }
         function forIncomingOnClose() {
-          incomingMessages.complete();
+          return incomingMessages.complete();
         }
         socket.addEventListener("message", forIncomingOnMessage);
         socket.addEventListener("close", forIncomingOnClose);
@@ -113,6 +139,7 @@ class WebSocketClient extends Bidirectional<
           socket.removeEventListener("error", forIncomingOnClose);
         });
       }),
+
       {
         get closed() {
           return (
@@ -120,18 +147,21 @@ class WebSocketClient extends Bidirectional<
             socket.readyState === WebSocket.CLOSED
           );
         },
+
         next: async (value) => {
+          if (socket.readyState === WebSocket.CONNECTING) {
+            await new Promise((resolve) => {
+              socket.addEventListener("open", resolve, { once: true });
+            });
+          }
+          await waitForSocketDrain(socket);
           if (socket.readyState !== WebSocket.OPEN) {
             return;
           }
           socket.send(value);
-          while (
-            socket.bufferedAmount > 0 &&
-            socket.readyState === WebSocket.OPEN
-          ) {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-          }
+          await waitForSocketDrain(socket);
         },
+
         complete: () => {
           if (socket.readyState !== WebSocket.CLOSED) {
             socket.close();
@@ -140,8 +170,29 @@ class WebSocketClient extends Bidirectional<
       },
     );
 
+    // timeout
+    const openingTimeoutToken: ReturnType<typeof setTimeout> = setTimeout(
+      () => {
+        socket.close();
+        socket.removeEventListener("open", onOpen);
+      },
+      options.timeout,
+    );
+
+    socket.addEventListener("open", onOpen);
+
+    function onOpen() {
+      clearTimeout(openingTimeoutToken);
+    }
+
     socket.addEventListener("close", (event) => {
       this.#closing = event;
     });
+  }
+}
+
+async function waitForSocketDrain(socket: WebSocketEligibleInstance) {
+  while (socket.bufferedAmount > 0 && socket.readyState === WebSocket.OPEN) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 }
