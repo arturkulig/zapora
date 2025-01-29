@@ -1,43 +1,40 @@
+import { BidirectionalState } from "./Bidirectional";
 import { BroadcastObserver } from "./BroadcastObserver";
-import { CompleteObserver, ReceivedReceit } from "./Observer";
+import { ReceivedReceit } from "./Observer";
 import { getQueueingObserver } from "./queueingObserver";
 import { State } from "./State";
 
-export class Atom<T> extends State<T> implements CompleteObserver<T> {
-  #value: T;
-
-  #broadcast: BroadcastObserver<T>;
-
-  get closed() {
-    return this.#broadcast.closed;
-  }
+export class Atom<T> extends BidirectionalState<T, T> {
+  #atomValue: T;
 
   constructor(initialValue: T) {
     const broadcast = new BroadcastObserver<T>();
     super(
-      (observer) =>
-        broadcast.add(
-          getQueueingObserver(observer, {
-            trim: { maxLength: 1, reject: "oldest" },
-          }),
-        ),
-      () => this.#value,
+      new State(
+        (observer) =>
+          broadcast.add(
+            getQueueingObserver(observer, {
+              trim: { maxLength: 1, reject: "oldest" },
+            }),
+          ),
+        () => this.#atomValue,
+      ),
+      broadcast,
     );
-    this.#broadcast = broadcast;
-    this.#value = initialValue;
+    this.#atomValue = initialValue;
   }
 
   next(value: T): ReceivedReceit {
-    this.#value = value;
-    return this.#broadcast.next(this.#value);
+    this.#atomValue = value;
+    return super.next(this.#atomValue);
   }
 
   update(updater: (value: T) => T): ReceivedReceit {
-    this.#value = updater(this.#value);
-    return this.#broadcast.next(this.#value);
+    this.#atomValue = updater(this.#atomValue);
+    return super.next(this.#atomValue);
   }
 
   complete(): ReceivedReceit {
-    return this.#broadcast.complete();
+    return super.complete();
   }
 }
