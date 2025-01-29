@@ -17,6 +17,7 @@ export class State<T> extends Observable<T> {
     this.#valueGetter = valueGetter;
   }
 
+  /** Convert to regular observable that releases current state as first message */
   toObservable(): Observable<T> {
     return new Observable<T>((observer) => {
       let innerSub: Subscription | null = null;

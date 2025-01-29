@@ -18,7 +18,7 @@ export function scan<T, U>(
   source: State<T> | Subscribable<T>,
   accumulate: ScanAccumulator<T, U>,
   start: U,
-): State<U> | Observable<U> {
+): State<U> {
   const producer: Producer<U> = (observer: Observer<U>) => {
     let lastAccumulate: U = start;
     const { next, complete } = observer;
@@ -42,7 +42,7 @@ export function scan<T, U>(
   if (source instanceof State) {
     return new State(producer, () => accumulate(start, source.value));
   }
-  return new Observable(producer);
+  return new State(producer, () => start);
 }
 
 type ScanAccumulator<T, U> = (previousValue: U, nextValue: T) => U;
