@@ -36,7 +36,10 @@ export function stateless<PROPS>(render: ZBStatelessComponentRender<PROPS>) {
 
 export type Component<PROPS> = {
   (props: PROPS): ZBComponentElement;
-  key: (key: TemplateStringsArray) => (props: PROPS) => ZBComponentElement;
+  key: (
+    key: TemplateStringsArray,
+    ...values: string[]
+  ) => (props: PROPS) => ZBComponentElement;
 };
 
 function makeComponentFactory<PROPS, STATE extends Record<string, any>>(
@@ -47,13 +50,18 @@ function makeComponentFactory<PROPS, STATE extends Record<string, any>>(
     key: makeComponentContentsWithKey,
   });
 
-  function makeComponentContentsWithKey(key: TemplateStringsArray) {
+  function makeComponentContentsWithKey(
+    templateTag: TemplateStringsArray,
+    ...templateTagValues: string[]
+  ) {
     return function (props: PROPS) {
       return makeKeyedComponentContents<PROPS, STATE>(
         render,
         props,
         defaultStateValues,
-        key.join(""),
+        templateTag
+          .map((word, index) => `${word}${templateTagValues[index] ?? ""}`)
+          .join(""),
       );
     };
   }

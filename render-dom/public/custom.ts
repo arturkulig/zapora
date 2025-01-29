@@ -1,7 +1,7 @@
 import { ImmutableProperties } from "../internal/ImmutableProperties";
 import { StreamMaybe } from "../internal/StreamMaybe";
 import { ElementDescription } from "./element";
-import { ZBChildren, ZBElement, ZBEventHandler } from "./types";
+import { RefType, ZBChildren, ZBElement, ZBEventHandler } from "./types";
 
 export function custom<CUSTOM>(tag: string) {
   return function customElement(
@@ -20,7 +20,7 @@ export function custom<CUSTOM>(tag: string) {
       style: properties?.style as Record<string, StreamMaybe<string>>,
       animate: properties?.animate,
       on: properties?.on as Record<string, ZBEventHandler>,
-      ref: properties?.ref,
+      ref: properties?.ref as RefType | undefined,
       children,
     };
   };

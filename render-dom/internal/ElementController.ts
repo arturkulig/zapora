@@ -1,5 +1,4 @@
-import { Observer } from "@zapora/core";
-import { ZBElementDesc } from "../public";
+import { RefType, ZBElementDesc } from "../public";
 import { AnimationComponentController } from "./AnimationComponentController";
 import { ChildrenComponentController } from "./ChildrenComponentController";
 import { ClassNameComponentController } from "./ClassNameComponentController";
@@ -25,7 +24,7 @@ export class ElementController {
     on: {},
   };
 
-  ref: Observer<Element> | undefined = undefined;
+  ref: RefType | undefined = undefined;
 
   constructor(private element: AnyElement) {}
 
@@ -130,14 +129,14 @@ export class ElementController {
   }
 
   mounted() {
-    if (this.ref && !this.ref.closed) {
-      this.ref.next?.(this.element);
+    if (this.ref) {
+      this.ref(this.element);
     }
   }
 
   unmounted() {
-    if (this.ref && !this.ref.closed) {
-      this.ref.complete?.();
+    if (this.ref) {
+      this.ref(null);
     }
 
     this.presentComponents.className?.destroy();
@@ -155,8 +154,6 @@ export class ElementController {
   }
 }
 
-function keysOf<T extends Record<any, any>>(
-  subject: T,
-): Array<Extract<keyof T, string>> {
-  return (Object.keys(subject) as any) ?? [];
+function keysOf<T extends Record<any, any>>(subject: T) {
+  return (Object.keys(subject) as Array<Extract<keyof T, string>>) ?? [];
 }

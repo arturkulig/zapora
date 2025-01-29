@@ -15,10 +15,10 @@ describe("renders with context", () => {
     root = document.createElement("div");
   });
 
-  it("passes context directly", async () => {
+  it("passes context directly", () => {
     const answer = new Context<string>();
 
-    const paragraph = stateless((props: void, context) => {
+    const paragraph = stateless((_props: void, context) => {
       return html.p({}, ["answer is ", context.get(answer)]);
     });
 
@@ -41,10 +41,10 @@ describe("renders with context", () => {
     destroy();
   });
 
-  it("passes context through a fragment", async () => {
+  it("passes context through a fragment", () => {
     const answer = new Context<string>();
 
-    const paragraph = stateless((props: void, context) => {
+    const paragraph = stateless((_props: void, context) => {
       return html.p(undefined, ["answer is ", context.get(answer)]);
     });
 
@@ -69,7 +69,7 @@ describe("renders with context", () => {
     destroy();
   });
 
-  it("passes context through an element", async () => {
+  it("passes context through an element", () => {
     const answer = new Context<string>();
 
     const paragraph = stateless((_props: void, context) => {

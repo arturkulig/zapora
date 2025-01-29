@@ -8,7 +8,7 @@ describe("informs of references as render occurs", () => {
     root = document.createElement("div");
   });
 
-  it("setting children causes not to replace the nodes", async () => {
+  it("setting children causes not to replace the nodes", () => {
     let nextCalled = false;
     let completeCalled = false;
     let inspected: Element;
@@ -19,16 +19,15 @@ describe("informs of references as render occurs", () => {
         },
         [
           html.div({
-            ref: {
-              next: (element) => {
+            ref: (element) => {
+              if (element) {
                 inspected = element;
                 nextCalled = true;
                 expect(element.parentNode).not.toBeNull();
-              },
-              complete: () => {
+              } else {
                 completeCalled = true;
                 expect(inspected.parentNode).toBeNull();
-              },
+              }
             },
           }),
         ],
@@ -50,16 +49,15 @@ describe("informs of references as render occurs", () => {
     let completeCalled = 0;
     let inspected: Element;
 
-    const ref = {
-      next: (element: Element) => {
+    const ref = (element: Element | null) => {
+      if (element) {
         inspected = element;
         nextCalled++;
         expect(element.parentNode).not.toBeNull();
-      },
-      complete: () => {
+      } else {
         completeCalled++;
         expect(inspected.parentNode).toBeNull();
-      },
+      }
     };
 
     const children$ = new Atom<ZBChildList>([

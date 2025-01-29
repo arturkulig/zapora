@@ -4,11 +4,7 @@ import { StreamedComponentController } from "./ComponentController";
 import { ContextComposer } from "./ContextComposer";
 import { createDomElement } from "./createDomElement";
 import { ElementController } from "./ElementController";
-import {
-  AnyElement,
-  ElementNamespace,
-  namespacesFull,
-} from "./ElementNamespaces";
+import { AnyElement, namespacesFull } from "./ElementNamespaces";
 import { ParentNodeManipulator } from "./ParentNodeManipulator";
 import { ComponentStateEntry, resolveNonElements } from "./resolveNonElements";
 import {
@@ -277,7 +273,7 @@ function isTextNode(node: Node): node is Text {
 function isSameElementType(node: Node, desc: ZBElement): node is AnyElement {
   return (
     node instanceof Element &&
-    node.namespaceURI === namespacesFull[desc.namespace as ElementNamespace] &&
+    node.namespaceURI === namespacesFull[desc.namespace] &&
     node.tagName === desc.tag
   );
 }

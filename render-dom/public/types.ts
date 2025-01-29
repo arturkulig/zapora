@@ -1,5 +1,4 @@
 import type { Atom, Observer } from "@zapora/core";
-import type { Properties as CSSProperties } from "csstype";
 import type { AnimationMessage } from "../internal/AnimationComponentController";
 import type { ChildKey } from "../internal/ChildKey";
 import type { ContextResolver } from "../internal/ContextResolver";
@@ -10,7 +9,6 @@ import type {
   ZB_TAG_CONTEXT,
   ZB_TAG_FRAGMENT,
 } from "../internal/fragmentSymbols";
-import type { ImmutableProperties } from "../internal/ImmutableProperties";
 import type { StreamMaybe } from "../internal/StreamMaybe";
 
 export type ZBChild =
@@ -36,6 +34,7 @@ export interface ZBComponentElement {
   key?: ChildKey;
   component: ZBComponentRender<any, any>;
   props: any;
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   defaultStateValues?: (() => any) | any;
 }
 
@@ -67,12 +66,14 @@ export interface ZBElement extends ZBElementDesc {
 
 export interface ZBElementDesc {
   children?: StreamMaybe<ZBChildren>;
-  className?: StreamMaybe<string>;
+  className?: StreamMaybe<string | string[]>;
   props?: Record<string, StreamMaybe<any>>;
   style?: Record<string, StreamMaybe<string>>;
   animate?: AnimationMessage | AnimationMessage[];
   on?: Record<string, ZBEventHandler>;
-  ref?: Observer<any>;
+  ref?: RefType;
 }
+
+export type RefType<E = Element> = (element: E | null) => void;
 
 export type ZBEventHandler<E = Event> = ((event: E) => void) | Observer<E>;

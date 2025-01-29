@@ -1,6 +1,6 @@
 // autoindex
-export * from "./Context";
 export * from "./component";
+export * from "./Context";
 export * from "./custom";
 export * from "./element";
 export * from "./fragment";

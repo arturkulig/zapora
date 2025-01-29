@@ -1,4 +1,4 @@
-import { Observer } from "@zapora/core";
+import type { Properties as CSSProperties } from "csstype";
 import { AnimationMessage } from "../internal/AnimationComponentController";
 import {
   ElementNamespace,
@@ -8,20 +8,27 @@ import {
 } from "../internal/ElementNamespaces";
 import { ImmutableProperties } from "../internal/ImmutableProperties";
 import { StreamMaybe } from "../internal/StreamMaybe";
-import { ZBChildren, ZBElement, ZBEventHandler } from "./types";
-import type { Properties as CSSProperties } from "csstype";
+import { RefType, ZBChildren, ZBElement, ZBEventHandler } from "./types";
 
 const spaces = new Proxy(
   {},
   {
-    get(_, namespaceShort: ElementNamespace) {
+    get(_target1, namespaceShort: ElementNamespace) {
       return new Proxy(
         {},
         {
-          get(_, tag: string) {
+          get(_target2, tag: string) {
             return Object.assign(makeElementFactory(namespaceShort, tag), {
-              key: function establishElementsKey(key: TemplateStringsArray) {
-                return makeElementFactory(namespaceShort, tag, key);
+              key: function establishElementsKey(
+                templateTag: TemplateStringsArray,
+                ...templateTagValues: string[]
+              ) {
+                return makeElementFactory(
+                  namespaceShort,
+                  tag,
+                  templateTag,
+                  templateTagValues,
+                );
               },
             });
           },
@@ -37,6 +44,7 @@ const spaces = new Proxy(
     > & {
       key: (
         key: TemplateStringsArray,
+        ...values: string[]
       ) => ElementFactory<
         NamespaceToElementRepository[ns][tn],
         NamespaceToEventMap[ns]
@@ -55,11 +63,11 @@ type ElementFactory<ElementType, EventMap extends Record<string, any>> = (
 ) => ZBElement;
 
 export interface ElementDescription<
-  REF extends any,
-  PROPERTIES extends any,
+  REF,
+  PROPERTIES,
   EVENTS extends Record<string, any>,
 > {
-  className?: StreamMaybe<string>;
+  className?: StreamMaybe<string | string[]>;
   props?: {
     [id in keyof PROPERTIES]?: StreamMaybe<PROPERTIES[id]>;
   };
@@ -92,7 +100,7 @@ export interface ElementDescription<
   } & {
     [id in StringOnlyKeys<EVENTS> as `${id}:once`]?: ZBEventHandler<EVENTS[id]>;
   };
-  ref?: Observer<REF>;
+  ref?: RefType<REF>;
 }
 
 type StringOnlyKeys<T> = Extract<keyof T, string>;
@@ -100,7 +108,8 @@ type StringOnlyKeys<T> = Extract<keyof T, string>;
 function makeElementFactory(
   namespaceShort: ElementNamespace,
   tag: string,
-  key?: TemplateStringsArray,
+  templateTag?: TemplateStringsArray,
+  templateTagValues?: string[],
 ): ElementFactory<any, Record<string, any>> {
   return createElementWithKey;
 
@@ -108,11 +117,13 @@ function makeElementFactory(
     properties?: ElementDescription<any, any, Record<string, any>>,
     children?: StreamMaybe<ZBChildren>,
   ): ZBElement {
-    return key
+    return templateTag
       ? ({
           namespace: namespaceShort,
           tag: tag.toUpperCase(),
-          key: key.join(""),
+          key: templateTag
+            .map((word, index) => `${word}${templateTagValues?.[index] ?? ""}`)
+            .join(""),
           className: properties?.className,
           props: properties?.props,
           style: properties?.style as Record<string, StreamMaybe<string>>,

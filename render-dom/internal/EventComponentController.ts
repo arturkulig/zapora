@@ -2,7 +2,10 @@ import { getQueueingObserver, Observer } from "@zapora/core";
 import { ZBEventHandler } from "../public";
 import { ComponentController } from "./ComponentController";
 
-export class EventComponentController extends ComponentController<EventTarget, ZBEventHandler> {
+export class EventComponentController extends ComponentController<
+  EventTarget,
+  ZBEventHandler
+> {
   eventName: string;
   postedListener: (event: Event) => void;
   userListenerNext: Observer<Event> | undefined;
@@ -19,7 +22,7 @@ export class EventComponentController extends ComponentController<EventTarget, Z
         this.userListenerNext.next &&
         !this.userListenerNext.closed
       ) {
-        this.userListenerNext.next(event);
+        void this.userListenerNext.next(event);
       }
     };
 
@@ -49,7 +52,7 @@ export class EventComponentController extends ComponentController<EventTarget, Z
       this.userListenerNext.complete &&
       !this.userListenerNext.closed
     ) {
-      this.userListenerNext.complete();
+      void this.userListenerNext.complete();
     }
   }
 
