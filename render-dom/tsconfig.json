@@ -1,7 +1,7 @@
 {
   "extends": "../ts/tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
+    "lib": ["DOM", "ESNext", "DOM.Iterable"],
     "types": [],
     "typeRoots": []
   },

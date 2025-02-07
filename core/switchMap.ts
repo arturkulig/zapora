@@ -50,7 +50,9 @@ export function switchMap<T, U>(
       ...(complete
         ? {
             complete: () => {
-              return then(lastReceit, () => complete.call(observer));
+              return (lastReceit = then(lastReceit, () =>
+                complete.call(observer),
+              ));
             },
           }
         : undefined),

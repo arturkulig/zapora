@@ -54,6 +54,7 @@ export class ChildrenComponentController extends StreamedComponentController<
         for (const node of leftNodes) {
           this.controllers.get(node)?.unmounted();
         }
+        // console.log("clear node", tag(this.element), this.element);
         this.element.replaceChildren();
         this.localStates = [];
         this.zonedNodesMap = new WeakMap();
@@ -79,6 +80,7 @@ export class ChildrenComponentController extends StreamedComponentController<
 
     // removal of left out
     for (const node of remove) {
+      // console.log("remove", tag(node), "from", tag(this.element), this.element);
       this.element.removeChild(node);
       this.controllers.get(node)?.unmounted();
     }
@@ -88,20 +90,48 @@ export class ChildrenComponentController extends StreamedComponentController<
     for (let i = 0; i < this.element.childNodes.length; i++) {
       const existingNode = existing[i];
       if (this.element.childNodes[i] !== existingNode) {
-        this.element.insertBefore(
-          existing[i],
-          this.element.childNodes[i] ?? null,
-        );
+        const afterNode = this.element.childNodes[i] ?? null;
+        // console.log(
+        //   "insert existing",
+        //   tag(existing[i]),
+        //   existing[i],
+        //   "before",
+        //   tag(afterNode),
+        //   afterNode,
+        // );
+        this.element.insertBefore(existing[i], afterNode);
       }
     }
 
     // inserts of new
     for (const instruction of inserts) {
+      if (instruction.inserts.length === 0) {
+        continue;
+      }
+
       if (instruction.before) {
+        // console.log(
+        //   "insert many new",
+        //   instruction.inserts.length,
+        //   ...instruction.inserts.map(tag),
+        //   [...instruction.inserts],
+        //   "before",
+        //   tag(instruction.before),
+        //   instruction.before,
+        // );
         new ChildNodeManipulator(instruction.before).before(
           instruction.inserts,
         );
       } else {
+        // console.log(
+        //   "insert many new",
+        //   instruction.inserts.length,
+        //   ...instruction.inserts.map(tag),
+        //   [...instruction.inserts],
+        //   "into",
+        //   tag(this.element),
+        //   this.element,
+        // );
         elementAsParent.append(instruction.inserts);
       }
     }
@@ -148,14 +178,18 @@ export class ChildrenComponentController extends StreamedComponentController<
     for (const settled of settledList) {
       const lastInstruction = insertInstructions.at(-1)!;
 
-      if (settled.present) {
-        existing.push(settled.node);
+      if (nodesLeftForRemoval.has(settled.node)) {
         nodesLeftForRemoval.delete(settled.node);
+        existing.push(settled.node);
 
-        if (lastInstruction.before) {
-          lastInstruction.inserts.push(lastInstruction.before);
-          lastInstruction.before = settled.node;
-        } else {
+        // if (lastInstruction.before) {
+        //   lastInstruction.inserts.push(lastInstruction.before);
+        //   lastInstruction.before = settled.node;
+        // } else {
+        //   lastInstruction.before = settled.node;
+        // }
+
+        if (!lastInstruction.before && lastInstruction.inserts.length > 0) {
           lastInstruction.before = settled.node;
         }
       } else {
@@ -277,3 +311,13 @@ function isSameElementType(node: Node, desc: ZBElement): node is AnyElement {
     node.tagName === desc.tag
   );
 }
+
+// function tag(subject: Node) {
+//   if (subject instanceof Text) {
+//     return `"${subject.textContent}"`;
+//   }
+//   if (subject instanceof Element) {
+//     return `${subject.tagName}${subject.id ? `"${subject.id}` : ""}${subject.className ? `.${[...subject.classList].join(".")}` : ""}`;
+//   }
+//   return String(subject);
+// }
