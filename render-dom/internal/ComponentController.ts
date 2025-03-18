@@ -1,5 +1,5 @@
-import { State, Subscribable, Subscription } from "@zapora/core";
-import { StreamMaybe } from "./StreamMaybe";
+import { Observable, State, Subscription } from "@zapora/core";
+import { Stream, StreamMaybe } from "./StreamMaybe";
 
 export abstract class ComponentController<ELEMENT, VALUE> {
   constructor(protected element: ELEMENT) {}
@@ -44,7 +44,7 @@ export abstract class StreamedComponentController<
 
     this.currentSource = source;
 
-    if (source != null && isSubscribable<VALUE>(source)) {
+    if (source != null && isStream<VALUE>(source)) {
       this.applyStream(source);
     } else {
       this.applyUnit(source);
@@ -65,17 +65,16 @@ export abstract class StreamedComponentController<
     }
   }
 
-  private applyStream(source: Subscribable<VALUE>) {
-    let destroyed = false;
+  private applyStream(source: Stream<VALUE>) {
     let completed = false;
 
-    if (source instanceof State) {
+    if (isState(source)) {
       this.applyUnit(source.value);
     }
 
     this.currentSourceSubscription = source.subscribe({
       get closed() {
-        return destroyed || completed;
+        return completed;
       },
       next: (value) => this.applyUnit(value),
       complete: () => {
@@ -85,8 +84,10 @@ export abstract class StreamedComponentController<
   }
 }
 
-function isSubscribable<T>(
-  input: T | Subscribable<T>,
-): input is Subscribable<T> {
-  return typeof input === "object" && input != null && "subscribe" in input;
+function isStream<T>(input: StreamMaybe<T>): input is Stream<T> {
+  return input instanceof Observable;
+}
+
+function isState<T>(input: StreamMaybe<T>): input is State<T> {
+  return input instanceof State;
 }

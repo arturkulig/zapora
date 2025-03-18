@@ -4,6 +4,7 @@ import { StreamedComponentController } from "./ComponentController";
 import { ContextComposer } from "./ContextComposer";
 import { createDomElement } from "./createDomElement";
 import { ElementController } from "./ElementController";
+import { ElementControlQueue } from "./ElementControlQueue";
 import { AnyElement, namespacesFull } from "./ElementNamespaces";
 import { ParentNodeManipulator } from "./ParentNodeManipulator";
 import { ComponentStateEntry, resolveNonElements } from "./resolveNonElements";
@@ -24,16 +25,11 @@ export class ChildrenComponentController extends StreamedComponentController<
   private localStates: ComponentStateEntry[] = [];
 
   constructor(
+    private queue: ElementControlQueue,
     element: ParentNode,
     private contexts: ContextComposer,
   ) {
     super(element);
-  }
-
-  mounted() {
-    for (const child of Array.from(this.element.childNodes)) {
-      this.controllers.get(child)?.mounted();
-    }
   }
 
   protected deinitialize(): void {
@@ -42,7 +38,7 @@ export class ChildrenComponentController extends StreamedComponentController<
     for (const child of children) {
       const elementController = this.controllers.get(child);
       if (elementController) {
-        elementController.unmounted();
+        this.queue.scheduleUnmount(elementController);
       }
     }
   }
@@ -52,7 +48,10 @@ export class ChildrenComponentController extends StreamedComponentController<
     if (!rawRight) {
       if (this.element.childNodes.length > 0) {
         for (const node of leftNodes) {
-          this.controllers.get(node)?.unmounted();
+          const controller = this.controllers.get(node);
+          if (controller) {
+            this.queue.scheduleUnmount(controller);
+          }
         }
         // console.log("clear node", tag(this.element), this.element);
         this.element.replaceChildren();
@@ -79,11 +78,17 @@ export class ChildrenComponentController extends StreamedComponentController<
     const { inserts, existing, remove } = this.compactRender(rightMaterialized);
 
     // removal of left out
-    for (const node of remove) {
-      // console.log("remove", tag(node), "from", tag(this.element), this.element);
-      this.element.removeChild(node);
-      this.controllers.get(node)?.unmounted();
-    }
+    if (remove.size > 0)
+      // console.log("remove", ...remove, "from", ...this.element.children);
+      for (const node of remove) {
+        // console.log("pre", this.element.childNodes.length);
+        this.element.removeChild(node);
+        // console.log("post", this.element.childNodes.length);
+        const controller = this.controllers.get(node);
+        if (controller) {
+          this.queue.scheduleUnmount(controller);
+        }
+      }
 
     // reorder of remaining
     const elementAsParent = new ParentNodeManipulator(this.element);
@@ -138,15 +143,6 @@ export class ChildrenComponentController extends StreamedComponentController<
 
     // follow with new properties on all children
     this.finalizeRightNodes(rightMaterialized);
-
-    // inform of the mount
-    if (this.element.parentNode) {
-      for (const settled of rightMaterialized) {
-        if (!settled.present && settled.type === ZBFinalElementTag.element) {
-          this.controllers.get(settled.node)!.mounted();
-        }
-      }
-    }
   }
 
   private finalizeRightNodes(settledList: Settled[]) {
@@ -154,7 +150,7 @@ export class ChildrenComponentController extends StreamedComponentController<
       if (settled.type === ZBFinalElementTag.element) {
         let controller: ElementController;
         if (!settled.present) {
-          controller = new ElementController(settled.node);
+          controller = new ElementController(this.queue, settled.node);
           this.controllers.set(settled.node, controller);
         }
         const foundController = this.controllers.get(settled.node);
@@ -162,7 +158,7 @@ export class ChildrenComponentController extends StreamedComponentController<
           throw new Error("Alien element encountered among nodes");
         }
         controller = foundController;
-        controller.applyDescription(settled.desc, settled.context);
+        controller.designate(settled.desc, settled.context);
       }
     }
   }
@@ -317,7 +313,7 @@ function isSameElementType(node: Node, desc: ZBElement): node is AnyElement {
 //     return `"${subject.textContent}"`;
 //   }
 //   if (subject instanceof Element) {
-//     return `${subject.tagName}${subject.id ? `"${subject.id}` : ""}${subject.className ? `.${[...subject.classList].join(".")}` : ""}`;
+//     return `${subject.tagName}${subject.id ? `"${subject.id}` : ""}${subject.className ? `.${[...subject.classList].join(".")}` : ""}>${subject.childNodes.length}`;
 //   }
 //   return String(subject);
 // }

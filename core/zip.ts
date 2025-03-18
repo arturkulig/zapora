@@ -11,6 +11,9 @@ type CombiningEntry<T> =
   | { filled: false }
   | { filled: true; value: T; ack?: () => void };
 
+/**
+ * Combines source streams so that next output is containing all fresh messages from all sources
+ */
 export function zip<const T extends any[] = unknown[]>(
   sources: SourcesToZip<T>,
 ): Observable<T> {

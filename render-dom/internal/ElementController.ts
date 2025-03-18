@@ -3,6 +3,7 @@ import { AnimationComponentController } from "./AnimationComponentController";
 import { ChildrenComponentController } from "./ChildrenComponentController";
 import { ClassNameComponentController } from "./ClassNameComponentController";
 import { ContextComposer } from "./ContextComposer";
+import { ElementControlQueue } from "./ElementControlQueue";
 import { AnyElement } from "./ElementNamespaces";
 import { EventComponentController } from "./EventComponentController";
 import { PropsComponentController } from "./PropsComponentController";
@@ -26,9 +27,16 @@ export class ElementController {
 
   ref: RefType | undefined = undefined;
 
-  constructor(private element: AnyElement) {}
+  constructor(
+    private queue: ElementControlQueue,
+    private element: AnyElement,
+  ) {}
 
-  applyDescription(description: ZBElementDesc, contexts: ContextComposer) {
+  designate(description: ZBElementDesc, contexts: ContextComposer) {
+    this.queue.scheduleUpdate(this, description, contexts);
+  }
+
+  apply(description: ZBElementDesc, contexts: ContextComposer) {
     const futureComponents: ElementComponentsControllers = {
       props: {},
       style: {},
@@ -122,22 +130,30 @@ export class ElementController {
     ) {
       (futureComponents.children =
         this.presentComponents.children ||
-        new ChildrenComponentController(this.element, contexts)).applySource(
-        description.children,
-      );
+        new ChildrenComponentController(
+          this.queue,
+          this.element,
+          contexts,
+        )).applySource(description.children);
     }
   }
 
+  private wasMounted = false;
   mounted() {
+    if (this.wasMounted) {
+      return;
+    }
+    this.wasMounted = true;
     if (this.ref) {
       this.ref(this.element);
     }
   }
 
   unmounted() {
-    if (this.ref) {
+    if (this.wasMounted && this.ref) {
       this.ref(null);
     }
+    this.wasMounted = true;
 
     this.presentComponents.className?.destroy();
     this.presentComponents.animate?.destroy();

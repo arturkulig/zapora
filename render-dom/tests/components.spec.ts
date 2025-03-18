@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { Atom } from "@zapora/core";
+import { Atom, State } from "@zapora/core";
 import {
   ZBChildList,
   ZBChildren,
@@ -12,7 +12,7 @@ import {
 describe("renders components", () => {
   let root: HTMLDivElement;
   beforeEach(() => {
-    root = document.createElement("div");
+    root = document.createElement("div") satisfies HTMLDivElement;
   });
 
   it("passing props", async () => {
@@ -53,7 +53,7 @@ describe("renders components", () => {
     destroy();
   });
 
-  it("resolves deeply nested uses including self-refering components", async () => {
+  it("resolves deeply nested uses including self-refering components", () => {
     const par = stateless(
       (props: { countdown: number }): ZBChildren =>
         props.countdown > 0
@@ -88,7 +88,7 @@ describe("renders components", () => {
 
     const custom = stateful({
       hello: "im ellen",
-    })((props: {}, { hello }) => {
+    })((_props: void, { hello }) => {
       hello$ = hello;
 
       return html.input({
@@ -96,7 +96,7 @@ describe("renders components", () => {
       });
     });
 
-    const children$ = new Atom<ZBChildren>([custom({})]);
+    const children$ = new Atom<ZBChildren>([custom()]);
 
     const destroy = render(
       html.div(
@@ -120,7 +120,7 @@ describe("renders components", () => {
     // at this point the local state of `custom` component is non-default
     // lets change the structure to see if it got persisted
 
-    await children$.next([custom({}), html.p()]);
+    await children$.next([custom(), html.p()]);
     const [input3] = Array.from(app.children);
     expect((input3 as HTMLInputElement).value).toBe("world");
 
@@ -128,7 +128,7 @@ describe("renders components", () => {
     // `custom` component changes its place
     // and looses the state
 
-    await children$.next([html.p(), custom({}), html.p()]);
+    await children$.next([html.p(), custom(), html.p()]);
     const [, input4] = Array.from(app.children);
     expect((input4 as HTMLInputElement).value).toBe("im ellen");
 
@@ -136,11 +136,15 @@ describe("renders components", () => {
   });
 
   it("maintain state assign to keyed components that move", async () => {
+    function input(props: { value: State<string>; initialValue: string }) {
+      return html.input({ props });
+    }
     const customInput = stateful((props: { initial: string }) => ({
       value: props.initial,
     }))((props, { value }) => {
-      return html.input({
-        props: { value, initialValue: props.initial } as any,
+      return input({
+        value,
+        initialValue: props.initial,
       });
     });
 
@@ -163,7 +167,7 @@ describe("renders components", () => {
 
     const [app] = Array.from(root.children);
 
-    const [input1a, _1, input1c, input1d] = Array.from(app.children);
+    const [input1a, _, input1c, input1d] = Array.from(app.children);
     expect((input1a as any).initialValue).toBe("A");
     expect((input1c as any).initialValue).toBe("C");
     expect((input1d as any).initialValue).toBe("D");

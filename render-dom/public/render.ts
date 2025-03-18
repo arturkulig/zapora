@@ -1,12 +1,14 @@
 import { ContextComposer } from "../internal/ContextComposer";
 import { ElementController } from "../internal/ElementController";
+import { ElementControlQueue } from "../internal/ElementControlQueue";
 import { ZBChild } from "./types";
 
 export function render(element: ZBChild, root: HTMLElement) {
   const emptyContext = new ContextComposer();
-  const rootController = new ElementController(root);
-  rootController.applyDescription({ children: element }, emptyContext);
+  const queue = new ElementControlQueue();
+  const rootController = new ElementController(queue, root);
+  rootController.designate({ children: element }, emptyContext);
   return () => {
-    rootController.unmounted();
+    queue.scheduleUnmount(rootController);
   };
 }
