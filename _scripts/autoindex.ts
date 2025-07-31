@@ -1,11 +1,10 @@
 import { glob, readFile, writeFile } from "node:fs/promises";
-import {resolve} from "node:path"
-import { basename, dirname } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 
 const INTENDED_TOKEN = "// autoindex";
 
 for await (const index of glob("./**/index.ts", {
-  cwd: resolve(import.meta.dirname, "../")
+  cwd: resolve(import.meta.dirname, "../"),
 })) {
   if (index.match(/^node_modules/) != null) {
     continue;
@@ -34,7 +33,7 @@ for await (const index of glob("./**/index.ts", {
     newContents.push(`export * from "./${basename(moduleFile, ".ts")}";`);
   }
 
-  await writeFile(index, newContents.join("\r\n"), {
+  await writeFile(index, newContents.join("\r\n").concat("\r\n"), {
     encoding: "utf-8",
   });
 }

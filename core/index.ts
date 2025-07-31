@@ -10,6 +10,7 @@ export * from "./distinct";
 export * from "./filter";
 export * from "./interval";
 export * from "./map";
+export * from "./mapAsync";
 export * from "./merge";
 export * from "./mergeAll";
 export * from "./Observable";

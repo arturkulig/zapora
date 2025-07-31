@@ -33,7 +33,9 @@ export function combineLatest<const T extends any[] = unknown[]>(
 export function combineLatest<const T extends any[] = unknown[]>(
   _sources: SourcesToCombine<T>,
 ): Observable<T> {
-  const sources: Array<Subscribable<T[number]>> = _sources as any;
+  const sources: Subscribable<T[number]>[] = _sources as any as Subscribable<
+    T[number]
+  >[];
 
   const producer = (observer: Observer<T>) => {
     const queueingObserver = getQueueingObserver(observer);
@@ -51,6 +53,15 @@ export function combineLatest<const T extends any[] = unknown[]>(
     );
 
     const firstMessageConfirmations = new Array<() => void>();
+
+    function confirmFirstMessage() {
+      if (firstMessageConfirmations.length === 0) {
+        return;
+      }
+      for (const confirmation of firstMessageConfirmations.splice(0)) {
+        queueMicrotask(confirmation);
+      }
+    }
 
     const subscriptions = sources.map((source, subscriptionIndex) =>
       source.subscribe({
@@ -89,12 +100,6 @@ export function combineLatest<const T extends any[] = unknown[]>(
                 }
 
                 return then(next(acc as T), confirmFirstMessage);
-
-                function confirmFirstMessage() {
-                  for (const confirmation of firstMessageConfirmations) {
-                    queueMicrotask(confirmation);
-                  }
-                }
               },
             }
           : undefined),
@@ -109,7 +114,7 @@ export function combineLatest<const T extends any[] = unknown[]>(
                   }
                 }
 
-                return complete.call(observer);
+                return complete();
               },
             }
           : undefined),
@@ -133,6 +138,9 @@ export function combineLatest<const T extends any[] = unknown[]>(
 
   return new State<T>(
     producer,
-    () => (sources as State<any>[]).map((source) => source.value) as T,
+    () =>
+      (sources as State<T[number]>[]).map(
+        (source): T[number] => source.value as T[number],
+      ) as T,
   );
 }

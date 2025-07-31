@@ -35,7 +35,8 @@ export function distinct<T>(
                 if (last == null) {
                   last = { value };
                   return next.call(observer, value);
-                } else if (!equals(last.value, value)) {
+                }
+                if (!equals(last.value, value)) {
                   last.value = value;
                   return next.call(observer, value);
                 }

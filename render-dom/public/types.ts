@@ -32,11 +32,14 @@ export interface ZBComponentElement {
   namespace: typeof ZB_NS;
   tag: typeof ZB_TAG_COMPONENT;
   key?: ChildKey;
-  component: ZBComponentRender<any, any>;
+  component: ZBComponentRender;
   props: any;
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  defaultStateValues?: (() => any) | any;
+  defaultStateValues?: ZBComponentDefaultState;
 }
+
+export type ZBComponentDefaultState<PROPS = any> =
+  | ((props: PROPS) => ZBStateArchetype)
+  | ZBStateArchetype;
 
 export interface ZBFragment {
   namespace: typeof ZB_NS;

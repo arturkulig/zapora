@@ -6,17 +6,12 @@ export function ofIterable<T>(iterable: Iterable<T>) {
   return new Observable<T>((observer) => {
     const iterator = iterable[Symbol.iterator]();
     const subscription = new SimpleSubscription();
-    let iterationDone = false;
 
     push();
 
     return subscription;
 
     function push() {
-      if (iterationDone) {
-        return;
-      }
-
       if (subscription.closed || observer.closed) {
         iterator.return?.();
         return;
@@ -24,11 +19,10 @@ export function ofIterable<T>(iterable: Iterable<T>) {
 
       const iterationResult = iterator.next();
       if (iterationResult.done) {
-        iterationDone = true;
-        then(observer.complete?.(), push);
+        void observer.complete?.();
         return;
       }
-      then(observer.next?.(iterationResult.value), push);
+      void then(observer.next?.(iterationResult.value), push);
     }
   });
 }

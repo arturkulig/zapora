@@ -6,6 +6,9 @@ export class BroadcastObserver<T> implements CompleteObserver<T> {
   #listeners = new Set<{ observer: Observer<T> }>();
 
   get closed() {
+    if (this.#listeners.size === 0) {
+      return false;
+    } // maybe always false?
     for (const listener of this.#listeners) {
       if (!listener.observer.closed) {
         return false;
@@ -38,7 +41,7 @@ export class BroadcastObserver<T> implements CompleteObserver<T> {
       }
     });
     return receits.some((receit) => receit !== undefined)
-      ? Promise.allSettled(receits).then(noop)
+      ? Promise.allSettled(receits.filter((item) => item != null)).then(noop)
       : undefined;
   }
 

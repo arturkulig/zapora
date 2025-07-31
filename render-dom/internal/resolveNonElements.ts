@@ -1,5 +1,10 @@
 import { Atom } from "@zapora/core";
-import { ZBChild, ZBChildren } from "../public/types";
+import {
+  ZBChild,
+  ZBChildren,
+  ZBComponentDefaultState,
+  ZBStateArchetype,
+} from "../public/types";
 import { ChildKey } from "./ChildKey";
 import { ContextComposer } from "./ContextComposer";
 import {
@@ -141,11 +146,11 @@ function makeZone(origin: ZoneOrigin, position: number, key?: ChildKey) {
   return key != null ? { origin, key } : { origin, position };
 }
 
-function selectLocalState<PROPS>(
+function selectLocalState(
   localStates: ComponentStateEntry[],
   componentPath: ZonePath,
-  props: PROPS,
-  defaultStateValues: Record<string, any> | undefined,
+  props: any,
+  defaultStateValues: ZBComponentDefaultState | undefined,
 ): ComponentStateEntry | null {
   for (const entry of localStates) {
     if (isSamePath(entry.path, componentPath)) {
@@ -157,12 +162,14 @@ function selectLocalState<PROPS>(
     return null;
   }
 
+  const d: ZBStateArchetype =
+    typeof defaultStateValues === "function"
+      ? (defaultStateValues(props) as ZBStateArchetype)
+      : defaultStateValues;
   const entry: ComponentStateEntry = {
     path: componentPath,
-    states: mapValues(
-      typeof defaultStateValues === "function"
-        ? defaultStateValues(props)
-        : defaultStateValues,
+    states: mapValues<ZBStateArchetype, Record<string, Atom<any>>>(
+      d,
       (defaultValue) => new Atom(defaultValue),
     ),
   };

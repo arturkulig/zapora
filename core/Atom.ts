@@ -11,12 +11,7 @@ export class Atom<T> extends BidirectionalState<T, T> {
     const broadcast = new BroadcastObserver<T>();
     super(
       new State(
-        (observer) =>
-          broadcast.add(
-            getQueueingObserver(observer, {
-              trim: { maxLength: 1, reject: "oldest" },
-            }),
-          ),
+        (observer) => broadcast.add(getQueueingObserver(observer)),
         () => this.#atomValue,
       ),
       broadcast,

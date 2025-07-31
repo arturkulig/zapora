@@ -74,7 +74,7 @@ function makeComponentFactory<PROPS, STATE extends Record<string, any>>(
   }
 }
 
-function makeKeyedComponentContents<PROPS, STATE extends Record<string, any>>(
+function makeKeyedComponentContents<PROPS, STATE extends ZBStateArchetype>(
   render: ZBComponentRender<PROPS, STATE>,
   props: PROPS,
   defaultStateValues?: ContainerOrGenerator<PROPS, STATE>,
@@ -84,7 +84,7 @@ function makeKeyedComponentContents<PROPS, STATE extends Record<string, any>>(
     namespace: ZB_NS,
     tag: ZB_TAG_COMPONENT,
     key,
-    component: render,
+    component: render as ZBComponentRender,
     props,
     defaultStateValues,
   };
