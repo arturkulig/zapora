@@ -12,51 +12,64 @@ export function switchMap<T, U>(
 ): Observable<U> {
   return new Observable<U>((observer) => {
     let innerStreamSubscription: Subscription = new SimpleSubscription();
-    const { next, complete } = observer;
     let lastReceit: ReceivedReceit = undefined;
     let pendingInnerStream: Subscribable<U> | undefined = undefined;
+    let outerCompleted = false;
+    let innerCompleted = false;
 
-    const sourceSubsription = source.subscribe({
+    const sourceSubscription = source.subscribe({
       get closed() {
         return observer.closed;
       },
-      ...(next
-        ? {
-            next(outerValue) {
-              if (!innerStreamSubscription.closed) {
-                innerStreamSubscription.cancel();
+
+      next(outerValue) {
+        if (!innerStreamSubscription.closed) {
+          innerStreamSubscription.cancel();
+        }
+
+        const innerStream = transform(outerValue);
+        pendingInnerStream = innerStream;
+
+        void then(lastReceit, () => {
+          if (innerStream !== pendingInnerStream) {
+            return;
+          }
+          lastReceit = undefined;
+          innerCompleted = false;
+          innerStreamSubscription = innerStream.subscribe({
+            get closed() {
+              return observer.closed;
+            },
+            next: (value) => {
+              if (observer.closed) {
+                return;
               }
-
-              const innerStream = transform(outerValue);
-              pendingInnerStream = innerStream;
-
-              void then(lastReceit, () => {
-                if (innerStream !== pendingInnerStream) {
-                  return;
-                }
-                lastReceit = undefined;
-                innerStreamSubscription = innerStream.subscribe({
-                  get closed() {
-                    return observer.closed;
-                  },
-                  next: (value) => {
-                    return (lastReceit = next.call(observer, value));
-                  },
-                });
-              });
+              return (lastReceit = observer.next?.(value));
             },
-          }
-        : undefined),
-      ...(complete
-        ? {
             complete: () => {
-              return (lastReceit = then(lastReceit, () =>
-                complete.call(observer),
-              ));
+              innerCompleted = true;
+              return targetComplete();
             },
-          }
-        : undefined),
+          });
+        });
+      },
+
+      complete: () => {
+        if (observer.closed) {
+          return;
+        }
+        outerCompleted = true;
+        return targetComplete();
+      },
     });
+
+    function targetComplete() {
+      return (lastReceit = then(lastReceit, () => {
+        if (outerCompleted && innerCompleted) {
+          return observer.complete?.();
+        }
+      }));
+    }
 
     return new TidySubscription(() => {
       lastReceit = undefined;
@@ -64,8 +77,8 @@ export function switchMap<T, U>(
       if (!innerStreamSubscription.closed) {
         innerStreamSubscription.cancel();
       }
-      if (!sourceSubsription.closed) {
-        sourceSubsription.cancel();
+      if (!sourceSubscription.closed) {
+        sourceSubscription.cancel();
       }
     });
   });
