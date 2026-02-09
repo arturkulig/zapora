@@ -1,9 +1,4 @@
-import {
-  BidirectionalObservable,
-  Observable,
-  Subject,
-  TidySubscription,
-} from "@zapora/core";
+import { BidirectionalObservable, Observable, Subject } from "@zapora/core";
 
 export interface BidiWsOptions {
   Constructor?: WebSocketEligibleConstructor;
@@ -69,17 +64,7 @@ export class PersistentWebSocketClient extends BidirectionalObservable<
 
     super(
       new Observable<WebSocketDuplexMessage>((observer) => {
-        const innerSub = intoSubject.subscribe({
-          get closed() {
-            return observer.closed;
-          },
-          next: (value) => observer.next?.(value),
-        });
-        return new TidySubscription(() => {
-          if (!innerSub.closed) {
-            innerSub.cancel();
-          }
-        });
+        return intoSubject.subscribe(observer);
       }),
 
       {
@@ -113,32 +98,11 @@ export class WebSocketClient extends BidirectionalObservable<
       options.protocols,
     );
     socket.binaryType = "arraybuffer";
+    const incomingMessages = new Subject<WebSocketDuplexMessage>();
 
     // interface
     super(
-      new Observable<WebSocketDuplexMessage>((observer) => {
-        const incomingMessages = new Subject<WebSocketDuplexMessage>();
-        const sub = incomingMessages.subscribe(observer);
-
-        function forIncomingOnMessage(event: MessageEvent) {
-          return incomingMessages.next(event.data as WebSocketDuplexMessage);
-        }
-        function forIncomingOnClose() {
-          return incomingMessages.complete();
-        }
-        socket.addEventListener("message", forIncomingOnMessage);
-        socket.addEventListener("close", forIncomingOnClose);
-        socket.addEventListener("error", forIncomingOnClose);
-
-        return new TidySubscription(() => {
-          if (!sub.closed) {
-            sub.cancel();
-          }
-          socket.removeEventListener("message", forIncomingOnMessage);
-          socket.removeEventListener("close", forIncomingOnClose);
-          socket.removeEventListener("error", forIncomingOnClose);
-        });
-      }),
+      incomingMessages,
 
       {
         get closed() {
@@ -185,9 +149,29 @@ export class WebSocketClient extends BidirectionalObservable<
       clearTimeout(openingTimeoutToken);
     }
 
-    socket.addEventListener("close", (event) => {
+    // start listen
+    const onMessage = async (event: MessageEvent<any>) => {
+      await incomingMessages.next(event.data as WebSocketDuplexMessage);
+    };
+    const onClose = async (event: CloseEvent) => {
       this.#closing = event;
-    });
+      stopListening();
+      await incomingMessages.complete();
+    };
+    const onError = async (_event: Event) => {
+      stopListening();
+      await incomingMessages.complete();
+    };
+
+    socket.addEventListener("message", onMessage);
+    socket.addEventListener("close", onClose);
+    socket.addEventListener("error", onError);
+
+    function stopListening() {
+      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("close", onClose);
+      socket.removeEventListener("error", onError);
+    }
   }
 }
 
