@@ -32,6 +32,7 @@ export * from "./take";
 export * from "./takeLast";
 export * from "./then";
 export * from "./TidySubscription";
+export * from "./toAsyncIterable";
 export * from "./toPromise";
 export * from "./withLatestFrom";
 export * from "./zip";
