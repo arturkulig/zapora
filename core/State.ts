@@ -20,7 +20,8 @@ export class State<T> extends Observable<T> {
     return new Observable<T>((observer) => {
       const { next, complete } = observer;
       let firstPushed = false;
-      const firstPromised = next ? next.call(observer, this.value) : undefined;
+      const firstPromised =
+        !observer.closed && next ? next.call(observer, this.value) : undefined;
       return this.subscribe({
         get closed() {
           return observer.closed;
@@ -29,11 +30,16 @@ export class State<T> extends Observable<T> {
           ? {
               next: (value) => {
                 if (firstPushed) {
-                  return next.call(observer, value);
+                  if (!observer.closed) {
+                    return next.call(observer, value);
+                  }
+                  return;
                 }
                 return then(firstPromised, () => {
                   firstPushed = true;
-                  return next.call(observer, value);
+                  if (!observer.closed) {
+                    return next.call(observer, value);
+                  }
                 });
               },
             }
@@ -42,11 +48,16 @@ export class State<T> extends Observable<T> {
           ? {
               complete: () => {
                 if (firstPushed) {
-                  return complete.call(observer);
+                  if (!observer.closed) {
+                    return complete.call(observer);
+                  }
+                  return;
                 }
                 return then(firstPromised, () => {
                   firstPushed = true;
-                  return complete.call(observer);
+                  if (!observer.closed) {
+                    return complete.call(observer);
+                  }
                 });
               },
             }

@@ -5,8 +5,8 @@ import { TidySubscription } from "./TidySubscription";
 
 interface DelayOptions {
   selectively?: {
-    next?: boolean;
-    complete?: boolean;
+    next: boolean;
+    complete: boolean;
   };
 }
 const noOptions: DelayOptions = {};

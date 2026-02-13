@@ -44,25 +44,9 @@ describe("subject operator", () => {
     expect(result).toEqual([6, 3, 3, -1]);
   });
 
-  it("as an observer indicates open subscriptions", () => {
+  it("as an observer is always open", () => {
     const subject = new Subject<number>();
-
-    expect(subject.closed).toBe(true);
-
-    let intendedClosed = false;
-
-    const sub = subject.subscribe({
-      get closed() {
-        return intendedClosed;
-      },
-      next: () => {},
-    });
     expect(subject.closed).toBe(false);
-
-    intendedClosed = true;
-    expect(subject.closed).toBe(true);
-
-    sub.cancel();
   });
 
   it("reports active subscription", () => {

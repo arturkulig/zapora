@@ -11,6 +11,7 @@ export function switchMap<T, U>(
   transform: (value: T) => Subscribable<U>,
 ): Observable<U> {
   return new Observable<U>((observer) => {
+    let subscriptionCancelled = false;
     let innerStreamSubscription: Subscription = new SimpleSubscription();
     let lastReceit: ReceivedReceit = undefined;
     let pendingInnerStream: Subscribable<U> | undefined = undefined;
@@ -31,6 +32,9 @@ export function switchMap<T, U>(
         pendingInnerStream = innerStream;
 
         void then(lastReceit, () => {
+          if (subscriptionCancelled) {
+            return;
+          }
           if (innerStream !== pendingInnerStream) {
             return;
           }
@@ -55,16 +59,19 @@ export function switchMap<T, U>(
       },
 
       complete: () => {
+        outerCompleted = true;
         if (observer.closed) {
           return;
         }
-        outerCompleted = true;
         return targetComplete();
       },
     });
 
     function targetComplete() {
       return (lastReceit = then(lastReceit, () => {
+        if (subscriptionCancelled) {
+          return;
+        }
         if (outerCompleted && innerCompleted) {
           return observer.complete?.();
         }
@@ -72,6 +79,7 @@ export function switchMap<T, U>(
     }
 
     return new TidySubscription(() => {
+      subscriptionCancelled = true;
       lastReceit = undefined;
       pendingInnerStream = undefined;
       if (!innerStreamSubscription.closed) {

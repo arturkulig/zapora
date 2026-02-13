@@ -1,12 +1,13 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, it } from "@jest/globals";
 import { timeout } from "./internal/timeout";
-import { map } from "./map";
+import { mapAsync } from "./mapAsync";
 import { ofIterable } from "./ofIterable";
 import { State } from "./State";
 import { expectStream } from "./tests/expectStream";
 
-const multiply = (n: number) =>
-  timeout(n * 10).then(() => Promise.resolve(n * 5));
+const multiply = (n: number) => n * 5;
+const multiplyLong = (n: number) =>
+  timeout(n * 10).then(() => Promise.resolve(multiply(n)));
 
 describe("mapAsync operator", () => {
   it("maps over an Observable", async () => {
@@ -14,7 +15,7 @@ describe("mapAsync operator", () => {
     const intended = pushed.map(multiply);
 
     await expectStream(
-      ofIterable(pushed).pipe((_) => map(_, multiply)),
+      ofIterable(pushed).pipe((_) => mapAsync(_, multiplyLong)),
       intended,
     );
   });
@@ -24,14 +25,11 @@ describe("mapAsync operator", () => {
     const intended = pushed.map(multiply);
 
     const initial = 33;
-    const intendedInitial = multiply(initial);
 
     const pipedState = new State(
       (observer) => ofIterable(pushed).subscribe(observer),
       (): number => initial,
-    ).pipe((_) => map(_, multiply));
-
-    expect(pipedState.value).toBe(intendedInitial);
+    ).pipe((_) => mapAsync(_, multiplyLong));
 
     await expectStream(pipedState, intended);
   });

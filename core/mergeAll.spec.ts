@@ -52,7 +52,9 @@ describe("mergeAll operator", () => {
             ofIterable([value]).pipe((_b) => delay(_b, value)),
           ),
         )
-        .pipe((_) => delay(_, 100, { selectively: { complete: true } }))
+        .pipe((_) =>
+          delay(_, 100, { selectively: { next: false, complete: true } }),
+        )
         .pipe((_) => mergeAll(_)),
       pushed.toSorted((a, b) => a - b),
     );

@@ -59,7 +59,9 @@ describe("delay operator", () => {
     const received = new Array<number>();
 
     const sub = ofIterable([1, 2, 3])
-      .pipe((_) => delay(_, 100, { selectively: { next: true } }))
+      .pipe((_) =>
+        delay(_, 100, { selectively: { next: true, complete: false } }),
+      )
       .subscribe({
         next: (value) => {
           received.push(value);
@@ -87,7 +89,9 @@ describe("delay operator", () => {
     const received = new Array<number>();
 
     const sub = ofIterable([1, 2, 3])
-      .pipe((_) => delay(_, 100, { selectively: { complete: true } }))
+      .pipe((_) =>
+        delay(_, 100, { selectively: { next: false, complete: true } }),
+      )
       .subscribe({
         next: (value) => {
           received.push(value);

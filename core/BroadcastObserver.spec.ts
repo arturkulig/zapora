@@ -2,26 +2,8 @@ import { describe, expect, it } from "@jest/globals";
 import { BroadcastObserver } from "./BroadcastObserver";
 
 describe("BroadcastObserver", () => {
-  it("isn't open until subscriptions appear", () => {
-    expect(new BroadcastObserver<void>().closed).toBe(true);
-  });
-
-  it("is open as long as any subscription's observer is open", () => {
-    const broadcast = new BroadcastObserver<void>();
-    const observers = Array.from(new Array(10), () => ({ closed: false }));
-    const subscriptions = observers.map((observer) => broadcast.add(observer));
-
-    expect(broadcast.closed).toBe(false);
-
-    observers[0].closed = true;
-    expect(broadcast.closed).toBe(false);
-
-    for (const observer of observers) {
-      observer.closed = true;
-    }
-    expect(broadcast.closed).toBe(true);
-
-    subscriptions.forEach((_) => _.cancel());
+  it("is open without subscriptions", () => {
+    expect(new BroadcastObserver<void>().closed).toBe(false);
   });
 
   it("returns immediately if there are no listeners", () => {

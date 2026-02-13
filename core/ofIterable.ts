@@ -19,10 +19,15 @@ export function ofIterable<T>(iterable: Iterable<T>) {
 
       const iterationResult = iterator.next();
       if (iterationResult.done) {
-        void observer.complete?.();
+        if (!observer.closed) {
+          void observer.complete?.();
+        }
         return;
       }
-      void then(observer.next?.(iterationResult.value), push);
+      void then(
+        !observer.closed ? observer.next?.(iterationResult.value) : undefined,
+        push,
+      );
     }
   });
 }

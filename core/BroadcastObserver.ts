@@ -6,15 +6,7 @@ export class BroadcastObserver<T> implements CompleteObserver<T> {
   #listeners = new Set<{ observer: Observer<T> }>();
 
   get closed() {
-    if (this.#listeners.size === 0) {
-      return false;
-    } // maybe always false?
-    for (const listener of this.#listeners) {
-      if (!listener.observer.closed) {
-        return false;
-      }
-    }
-    return true;
+    return false;
   }
 
   add(observer: Observer<T>): Subscription {

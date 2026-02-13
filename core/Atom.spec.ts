@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { Atom } from "./Atom";
+import { timeout } from "./internal/timeout";
 
 describe("Atom", () => {
   it("remembers last value pushed", async () => {
@@ -23,23 +24,9 @@ describe("Atom", () => {
     sub.cancel();
   });
 
-  it("as an observer indicates open subscriptions", () => {
+  it("as an observer is always open", () => {
     const state = new Atom(0);
-
-    expect(state.closed).toBe(true);
-
-    let intendedClosed = false;
-
-    state.subscribe({
-      get closed() {
-        return intendedClosed;
-      },
-      next: () => {},
-    });
-
-    expect(state.closed).toBe(intendedClosed);
-    intendedClosed = !intendedClosed;
-    expect(state.closed).toBe(intendedClosed);
+    expect(state.closed).toBe(false);
   });
 
   it("passes on values and completes", async () => {
@@ -67,7 +54,7 @@ describe("Atom", () => {
     sub.cancel();
   });
 
-  it("skips updates when observer holds up", async () => {
+  it("queues updates when observer holds up", async () => {
     const result = new Array<string>();
     const releases = new Array<() => void>();
 
@@ -98,9 +85,12 @@ describe("Atom", () => {
     expect(result).toEqual(["next1"]);
 
     releases.forEach((release) => release());
-    await Promise.resolve();
+    await timeout(0);
+    expect(result).toEqual(["next1", "next2"]);
 
-    expect(result).toEqual(["next1", "next3"]);
+    releases.forEach((release) => release());
+    await timeout(0);
+    expect(result).toEqual(["next1", "next2", "next3"]);
 
     sub.cancel();
   });

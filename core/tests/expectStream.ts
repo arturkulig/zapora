@@ -60,6 +60,9 @@ export async function expectStream<T>(
     });
 
     const subJustCompleted = stream.subscribe({
+      get closed() {
+        return partialResult.completed;
+      },
       complete: () => {
         partialResult.completed = true;
       },
@@ -81,6 +84,7 @@ export async function expectStream<T>(
     const forceCompletionMarkingToken = setTimeout(() => {
       forceCompletion = true;
     }, 4000);
+
     if (testCompleteRelease) {
       await testCompleteRelease;
     } else {
@@ -94,10 +98,12 @@ export async function expectStream<T>(
       }
       await new Promise((r) => setTimeout(r, 10));
     }
+
     clearTimeout(forceCompletionMarkingToken);
     if (forceCompletion) {
       console.warn("Forced completion");
     }
+
     expect(completeResult).toEqual({
       received: expectedReceivedValues,
       completed:
