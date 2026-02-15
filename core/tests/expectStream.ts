@@ -11,14 +11,6 @@ export async function expectStream<T>(
 ) {
   let tick = true;
 
-  void (async () => {
-    while (tick) {
-      await (jest.getTimerCount()
-        ? jest.advanceTimersByTimeAsync(1)
-        : Promise.resolve());
-    }
-  })();
-
   try {
     const completeResult = {
       received: new Array<T>(),
@@ -84,6 +76,14 @@ export async function expectStream<T>(
     const forceCompletionMarkingToken = setTimeout(() => {
       forceCompletion = true;
     }, 4000);
+
+    void (async () => {
+      while (tick) {
+        await (jest.getTimerCount()
+          ? jest.advanceTimersByTimeAsync(1)
+          : Promise.resolve());
+      }
+    })();
 
     if (testCompleteRelease) {
       await testCompleteRelease;

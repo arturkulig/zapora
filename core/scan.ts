@@ -4,23 +4,23 @@ import { Producer } from "./Producer";
 import { State } from "./State";
 import { Subscribable } from "./Subscribable";
 
-export function scan<T, U>(
-  source: State<T>,
-  accumulate: ScanAccumulator<T, U>,
-  start: U,
-): State<U>;
-export function scan<T, U>(
-  source: Subscribable<T>,
-  accumulate: ScanAccumulator<T, U>,
-  start: U,
-): Observable<U>;
-export function scan<T, U>(
-  source: State<T> | Subscribable<T>,
-  accumulate: ScanAccumulator<T, U>,
-  start: U,
-): State<U> {
-  const producer: Producer<U> = (observer: Observer<U>) => {
-    let lastAccumulate: U = start;
+export function scan<ITEM, REDUCED>(
+  source: State<ITEM>,
+  accumulate: ScanAccumulator<ITEM, REDUCED>,
+  start: REDUCED,
+): State<REDUCED>;
+export function scan<ITEM, REDUCED>(
+  source: Subscribable<ITEM>,
+  accumulate: ScanAccumulator<ITEM, REDUCED>,
+  start: REDUCED,
+): Observable<REDUCED>;
+export function scan<ITEM, REDUCED>(
+  source: State<ITEM> | Subscribable<ITEM>,
+  accumulate: ScanAccumulator<ITEM, REDUCED>,
+  start: REDUCED,
+): State<REDUCED> {
+  const producer: Producer<REDUCED> = (observer: Observer<REDUCED>) => {
+    let lastAccumulate: REDUCED = start;
     const { next, complete } = observer;
 
     return source.subscribe({
@@ -29,7 +29,7 @@ export function scan<T, U>(
       },
       ...(next
         ? {
-            next: (value: T) =>
+            next: (value: ITEM) =>
               next.call(
                 observer,
                 (lastAccumulate = accumulate(lastAccumulate, value)),

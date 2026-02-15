@@ -15,6 +15,7 @@ export * from "./merge";
 export * from "./mergeAll";
 export * from "./Observable";
 export * from "./Observer";
+export * from "./ofAsyncIterable";
 export * from "./ofIterable";
 export * from "./ofPromise";
 export * from "./Producer";

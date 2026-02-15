@@ -18,16 +18,14 @@ export function ofIterable<T>(iterable: Iterable<T>) {
       }
 
       const iterationResult = iterator.next();
-      if (iterationResult.done) {
-        if (!observer.closed) {
-          void observer.complete?.();
-        }
+      if (subscription.closed || observer.closed) {
         return;
       }
-      void then(
-        !observer.closed ? observer.next?.(iterationResult.value) : undefined,
-        push,
-      );
+      if (iterationResult.done) {
+        void observer.complete?.();
+        return;
+      }
+      void then(observer.next?.(iterationResult.value), push);
     }
   });
 }

@@ -96,7 +96,7 @@ describe("ofIterable", () => {
     sub.cancel();
   });
 
-  it("closes iteration on partial consumption (observer closed)", async () => {
+  it("closes iteration on partial consumption (observer closed)", () => {
     let completed = false;
     const received = new Array<number>();
 
