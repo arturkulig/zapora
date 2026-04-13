@@ -1,7 +1,10 @@
 import { StreamedComponentController } from "./ComponentController";
 
 interface ElementWithStyle {
-  style: any;
+  style: {
+    setProperty(property: string, value: string): void;
+    getPropertyValue(property: string): string;
+  };
 }
 
 export class StyleComponentController extends StreamedComponentController<
@@ -11,18 +14,18 @@ export class StyleComponentController extends StreamedComponentController<
   private initial: string;
 
   constructor(
-    element: ElementCSSInlineStyle,
+    element: ElementWithStyle,
     private key: string,
   ) {
     super(element);
-    this.initial = this.element.style[key as any];
+    this.initial = this.element.style.getPropertyValue(this.key);
   }
 
   protected deinitialize(): void {
-    this.element.style[this.key as any] = this.initial;
+    this.element.style.setProperty(this.key, this.initial);
   }
 
   protected applyValue(value: string | undefined): void {
-    this.element.style[this.key as any] = value ?? this.initial;
+    this.element.style.setProperty(this.key, value ?? this.initial);
   }
 }

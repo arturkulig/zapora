@@ -73,6 +73,8 @@ export interface ElementDescription<
   };
   style?: {
     [id in keyof CSSProperties]?: StreamMaybe<CSSProperties[id]>;
+  } & {
+    [id in `--${string}`]?: StreamMaybe<string>;
   };
   animate?: AnimationMessage | AnimationMessage[];
   on?: {
