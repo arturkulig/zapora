@@ -2,6 +2,7 @@
 export * from "./Atom";
 export * from "./Bidirectional";
 export * from "./BroadcastObserver";
+export * from "./ClosingObserver";
 export * from "./combineLatest";
 export * from "./concat";
 export * from "./concatAll";

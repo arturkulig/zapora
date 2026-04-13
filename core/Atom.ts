@@ -1,5 +1,6 @@
 import { BidirectionalState } from "./Bidirectional";
 import { BroadcastObserver } from "./BroadcastObserver";
+import { ClosingObserver } from "./ClosingObserver";
 import { ReceivedReceit } from "./Observer";
 import { getQueueingObserver } from "./queueingObserver";
 import { State } from "./State";
@@ -9,12 +10,13 @@ export class Atom<T> extends BidirectionalState<T, T> {
 
   constructor(initialValue: T) {
     const broadcast = new BroadcastObserver<T>();
+    const receiver = new ClosingObserver(broadcast);
     super(
       new State(
         (observer) => broadcast.add(getQueueingObserver(observer)),
         () => this.#atomValue,
       ),
-      broadcast,
+      receiver,
     );
     this.#atomValue = initialValue;
   }
