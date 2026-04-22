@@ -68,6 +68,7 @@ export interface ElementDescription<
   EVENTS extends Record<string, any>,
 > {
   className?: StreamMaybe<string | string[]>;
+  attrs?: Partial<Record<string, StreamMaybe<string | null>>>;
   props?: {
     [id in keyof PROPERTIES]?: StreamMaybe<PROPERTIES[id]>;
   };
@@ -122,11 +123,12 @@ function makeElementFactory(
     return templateTag
       ? ({
           namespace: namespaceShort,
-          tag: tag.toUpperCase(),
+          tag: tag,
           key: templateTag
             .map((word, index) => `${word}${templateTagValues?.[index] ?? ""}`)
             .join(""),
           className: properties?.className,
+          attrs: properties?.attrs,
           props: properties?.props,
           style: properties?.style as Record<string, StreamMaybe<string>>,
           animate: properties?.animate,
@@ -136,8 +138,9 @@ function makeElementFactory(
         } satisfies ZBElement)
       : ({
           namespace: namespaceShort,
-          tag: tag.toUpperCase(),
+          tag: tag,
           className: properties?.className,
+          attrs: properties?.attrs,
           props: properties?.props,
           style: properties?.style as Record<string, StreamMaybe<string>>,
           animate: properties?.animate,

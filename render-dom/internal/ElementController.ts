@@ -1,5 +1,6 @@
 import { RefType, ZBElementDesc } from "../public";
 import { AnimationComponentController } from "./AnimationComponentController";
+import { AttrsComponentController } from "./AttrsComponentController";
 import { ChildrenComponentController } from "./ChildrenComponentController";
 import { ClassNameComponentController } from "./ClassNameComponentController";
 import { ContextComposer } from "./ContextComposer";
@@ -11,6 +12,7 @@ import { StyleComponentController } from "./StyleComponentController";
 
 interface ElementComponentsControllers {
   className?: ClassNameComponentController;
+  attrs: Record<string, AttrsComponentController>;
   props: Record<string, PropsComponentController>;
   style: Record<string, StyleComponentController>;
   animate?: AnimationComponentController;
@@ -20,6 +22,7 @@ interface ElementComponentsControllers {
 
 export class ElementController {
   presentComponents: ElementComponentsControllers = {
+    attrs: {},
     props: {},
     style: {},
     on: {},
@@ -38,6 +41,7 @@ export class ElementController {
 
   apply(description: ZBElementDesc, contexts: ContextComposer) {
     const futureComponents: ElementComponentsControllers = {
+      attrs: {},
       props: {},
       style: {},
       on: {},
@@ -46,6 +50,7 @@ export class ElementController {
     this.ref = description.ref;
 
     this.applyClassName(description, futureComponents);
+    this.applyAttributes(description, futureComponents);
     this.applyProperties(description, futureComponents);
     this.applyStyle(description, futureComponents);
     this.applyEventHandlers(description, futureComponents);
@@ -66,6 +71,22 @@ export class ElementController {
         this.presentComponents.className ||
         new ClassNameComponentController(this.element)).applySource(
         description.className,
+      );
+    }
+  }
+
+  private applyAttributes(
+    description: ZBElementDesc,
+    futureComponents: ElementComponentsControllers,
+  ) {
+    const presentNames = Object.keys(this.presentComponents.attrs);
+    const futureNames = description.attrs ? Object.keys(description.attrs) : [];
+    const propNames = new Set([...presentNames, ...futureNames]);
+    for (const propName of propNames) {
+      (futureComponents.attrs[propName] =
+        this.presentComponents.attrs[propName] ||
+        new AttrsComponentController(this.element, propName)).applySource(
+        description.attrs?.[propName],
       );
     }
   }
@@ -157,6 +178,9 @@ export class ElementController {
 
     this.presentComponents.className?.destroy();
     this.presentComponents.animate?.destroy();
+    for (const component of Object.values(this.presentComponents.attrs)) {
+      component.destroy();
+    }
     for (const component of Object.values(this.presentComponents.props)) {
       component.destroy();
     }

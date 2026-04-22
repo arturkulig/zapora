@@ -304,7 +304,7 @@ function isSameElementType(node: Node, desc: ZBElement): node is AnyElement {
   return (
     node instanceof Element &&
     node.namespaceURI === namespacesFull[desc.namespace] &&
-    node.tagName === desc.tag
+    node.tagName.toLowerCase() === desc.tag.toLowerCase()
   );
 }
 

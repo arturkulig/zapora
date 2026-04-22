@@ -12,12 +12,17 @@ export class StyleComponentController extends StreamedComponentController<
   string
 > {
   private initial: string;
+  private key: string;
 
-  constructor(
-    element: ElementWithStyle,
-    private key: string,
-  ) {
+  constructor(element: ElementWithStyle, key: string) {
     super(element);
+    this.key = [...key]
+      .map((letter) =>
+        letter === letter.toUpperCase() && letter !== "-"
+          ? `-${letter.toLowerCase()}`
+          : letter,
+      )
+      .join("");
     this.initial = this.element.style.getPropertyValue(this.key);
   }
 

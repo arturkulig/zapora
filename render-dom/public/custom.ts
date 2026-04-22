@@ -16,6 +16,7 @@ export function custom<CUSTOM>(tag: string) {
       namespace: "html",
       tag,
       className: properties?.className,
+      attrs: properties?.attrs,
       props: properties?.props,
       style: properties?.style as Record<string, StreamMaybe<string>>,
       animate: properties?.animate,

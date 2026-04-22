@@ -70,8 +70,9 @@ export interface ZBElement extends ZBElementDesc {
 export interface ZBElementDesc {
   children?: StreamMaybe<ZBChildren>;
   className?: StreamMaybe<string | string[]>;
-  props?: Record<string, StreamMaybe<any>>;
-  style?: Record<string, StreamMaybe<string>>;
+  attrs?: Partial<Record<string, StreamMaybe<string | null>>>;
+  props?: Partial<Record<string, StreamMaybe<any>>>;
+  style?: Partial<Record<string, StreamMaybe<string>>>;
   animate?: AnimationMessage | AnimationMessage[];
   on?: Record<string, ZBEventHandler>;
   ref?: RefType;
