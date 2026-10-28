@@ -1,5 +1,9 @@
 import { BidirectionalObservable, Observable, Subject } from "@zapora/core";
 
+export interface PersistentBidiWsOptions extends BidiWsOptions {
+  retryDelay?: number;
+}
+
 export interface BidiWsOptions {
   Constructor?: WebSocketEligibleConstructor;
   url: string | URL;
@@ -30,13 +34,13 @@ export type WebSocketEligibleInstance = Pick<
   | "removeEventListener"
 >;
 
-export type WebSocketDuplexMessage = string | ArrayBufferLike;
+export type WebSocketDuplexMessage = BufferSource | Blob | string;
 
 export class PersistentWebSocketClient extends BidirectionalObservable<
   WebSocketDuplexMessage,
   WebSocketDuplexMessage
 > {
-  constructor(options: BidiWsOptions) {
+  constructor(options: PersistentBidiWsOptions) {
     let closedOnDemand = false;
     const intoSubject = new Subject<WebSocketDuplexMessage>();
     let wsClient = getNewClient();
@@ -52,9 +56,12 @@ export class PersistentWebSocketClient extends BidirectionalObservable<
             return intoSubject.next(value);
           }
         },
-        complete: () => {
+        complete: async () => {
           if (closedOnDemand) {
             return;
+          }
+          if ((options.retryDelay ?? 0) > 0) {
+            await new Promise((r) => setTimeout(r, options.retryDelay));
           }
           wsClient = getNewClient();
         },
