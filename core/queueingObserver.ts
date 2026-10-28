@@ -1,4 +1,5 @@
-import { Observer, ReceivedReceit } from "./Observer";
+import { scheduleImmediately } from "./internal/scheduleImmediately";
+import { CompleteObserver, Observer, ReceivedReceit } from "./Observer";
 import { then } from "./then";
 
 type ValueMessage<T> = { done: false; value: T };
@@ -15,7 +16,8 @@ export interface QueueOptions {
 export function getQueueingObserver<T>(
   target: Observer<T>,
   options?: QueueOptions,
-): Observer<T> {
+): CompleteObserver<T> {
+  let completed = false;
   const { next, complete } = target;
 
   const envelopes = new Array<Envelope<T>>();
@@ -23,26 +25,33 @@ export function getQueueingObserver<T>(
 
   return {
     get closed() {
-      return target.closed;
+      return completed || !!target.closed;
     },
-    ...(next
-      ? {
-          next: (value) => considerSending({ done: false, value }),
-        }
-      : undefined),
-    ...(complete
-      ? { complete: () => considerSending({ done: true }) }
-      : undefined),
+    next: (value) => considerSending({ done: false, value }),
+    complete: () => considerSending({ done: true }),
   };
 
   function considerSending(message: Message<T>) {
-    if (valves.length) {
+    if (completed) {
+      return;
+    }
+
+    if (message.done) {
+      completed = true;
+    }
+
+    if (target.closed) {
+      return;
+    }
+
+    if (valves.length > 0 || envelopes.length > 0) {
       return new Promise<void>((resolve) => {
         envelopes.push(
           message.done
             ? ({ done: true, ack: resolve } as const)
             : ({ done: false, value: message.value, ack: resolve } as const),
         );
+
         if (
           options &&
           options.trim &&
@@ -86,7 +95,6 @@ export function getQueueingObserver<T>(
 
   function release() {
     const nextMessage = envelopes.shift();
-
     if (nextMessage) {
       return sendNext(nextMessage);
     }
@@ -95,14 +103,16 @@ export function getQueueingObserver<T>(
     if (valve === undefined) {
       return;
     }
-    queueMicrotask(release);
+    scheduleImmediately(release);
     valve();
   }
 
   function sendNext(message: Envelope<T>) {
-    const receit = message.done
-      ? complete?.call(target)
-      : next?.call(target, message.value);
+    const receit = target.closed
+      ? undefined
+      : message.done
+        ? complete?.call(target)
+        : next?.call(target, message.value);
 
     valves.push(message.ack);
 

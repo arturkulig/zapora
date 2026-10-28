@@ -21,16 +21,12 @@ export function merge<T>(
 
   const producer: Producer<T> = (rawObserver: Observer<T>) => {
     if (sourcesArray.length === 0) {
-      if (!rawObserver.closed) {
-        void rawObserver.complete?.();
-      }
       return new SimpleSubscription();
     }
 
     const queueingObserver = getQueueingObserver(rawObserver, {
       trim: { maxLength: sourcesArray.length, reject: "oldest" },
     });
-    const { next, complete } = queueingObserver;
 
     const completed = sourcesArray.map(() => false);
 
@@ -39,23 +35,21 @@ export function merge<T>(
         get closed() {
           return queueingObserver.closed;
         },
-        ...(next ? { next } : undefined),
-        ...(complete
-          ? {
-              complete: () => {
-                completed[i] = true;
-                if (completed.every(identity)) {
-                  return complete();
-                }
-              },
-            }
-          : undefined),
+        next: (value) => queueingObserver.next(value),
+        complete: () => {
+          completed[i] = true;
+          if (completed.every(identity)) {
+            return queueingObserver.complete();
+          }
+        },
       }),
     );
 
     return new TidySubscription(() => {
       for (const subscription of subscriptions.splice(0)) {
-        subscription.cancel();
+        if (!subscription.closed) {
+          subscription.cancel();
+        }
       }
     });
   };
