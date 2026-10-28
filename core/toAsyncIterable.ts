@@ -8,42 +8,61 @@ export function toAsyncIterable<T>(source: Subscribable<T>): AsyncIterable<T> {
       const queue: { result: IteratorResult<T, void>; ack: () => void }[] = [];
 
       let subDMZAvailable = false;
-      let subImmediatelyCancelled = false;
+      let sourceCompleted = false;
+      let targetFinished = false;
       const sub = source.subscribe({
+        get closed() {
+          return sourceCompleted || targetFinished;
+        },
+
         next: (value) => {
+          if (sourceCompleted) {
+            return;
+          }
+
           if (liveRequest) {
             const currentRequest = liveRequest;
             liveRequest = null;
             currentRequest({ done: false, value });
             return;
           }
+
           return new Promise((r) => {
             queue.push({ result: { done: false, value }, ack: r });
           });
         },
+
         complete: () => {
+          if (sourceCompleted) {
+            return;
+          }
+
           if (subDMZAvailable) {
             if (!sub.closed) {
               sub.cancel();
             }
           }
-          subImmediatelyCancelled = true;
+          sourceCompleted = true;
+
           if (liveRequest) {
             const currentRequest = liveRequest;
             liveRequest = null;
             currentRequest({ done: true, value: undefined });
             return;
           }
+
           return new Promise((r) => {
             queue.push({ result: { done: true, value: undefined }, ack: r });
           });
         },
       });
-      if (subImmediatelyCancelled) {
+
+      if (sourceCompleted) {
         if (!sub.closed) {
           sub.cancel();
         }
       }
+
       subDMZAvailable = true;
 
       return {
@@ -60,19 +79,23 @@ export function toAsyncIterable<T>(source: Subscribable<T>): AsyncIterable<T> {
             liveRequest = r;
           });
         },
-        throw() {
-          if (!sub.closed) {
-            sub.cancel();
-          }
-          return Promise.resolve({ done: true, value: undefined });
-        },
-        return() {
-          if (!sub.closed) {
-            sub.cancel();
-          }
-          return Promise.resolve({ done: true, value: undefined });
-        },
+        throw: subCleanup,
+        return: subCleanup,
       };
+
+      function subCleanup(this: void): Promise<IteratorResult<T, void>> {
+        targetFinished = true;
+
+        if (!sub.closed) {
+          sub.cancel();
+        }
+
+        for (const item of queue.splice(0)) {
+          void item.ack();
+        }
+
+        return Promise.resolve({ done: true, value: undefined });
+      }
     },
   };
 }
